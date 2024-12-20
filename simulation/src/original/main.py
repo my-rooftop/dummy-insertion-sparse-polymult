@@ -86,9 +86,9 @@ class ResultAnalyzer:
 def main():
     # 데이터 로드
     loader = DataLoader()
-    r2_positions = loader.read_positions_from_csv('./data/r2_bits.csv')
-    h_positions = loader.read_positions_from_csv('./data/h_bits.csv')
-    result_positions = loader.read_positions_from_csv('./data/r2h_result_bits.csv')
+    r2_positions = loader.read_positions_from_csv('./data/66/y_bits.csv')
+    h_positions = loader.read_positions_from_csv('./data/66/h_for_y_bits.csv')
+    result_positions = loader.read_positions_from_csv('./data/66/s_bits.csv')
 
     # 초기 데이터 정보 출력
     print(f"r2의 1인 비트 개수: {len(r2_positions)}")
