@@ -43,6 +43,11 @@ class PolynomialMemory:
             return 0
         return self.memory[word_idx]
     
+    def set_word(self, word_idx: int, value: int) -> None:
+        """Set word at given index"""
+        if word_idx < self.num_words:
+            self.memory[word_idx] = value
+    
     def get_memory(self) -> List[int]:
         """Get entire memory contents"""
         return self.memory.copy()

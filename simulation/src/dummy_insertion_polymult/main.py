@@ -1,6 +1,7 @@
 from data_loader import DataLoader
 from memory import PolynomialMemory
 from dummy_insertion import DummyInsertion
+from controller import Controller
 
 def main():
     # 데이터 로드
@@ -26,6 +27,8 @@ def main():
 
 
 
+
+
     # # Print overall analysis
     # dummy_inserter.print_analysis(r2_positions, r2_positions_with_dummies, r2_packed_words)
     
@@ -35,6 +38,11 @@ def main():
     # # Print detailed analysis
     # dummy_inserter.print_dummy_details(r2_positions_with_dummies, positions_map)
     # dummy_inserter.print_packed_words(r2_packed_words, positions_map)
+
+    # Create controller for polynomial multiplication
+    controller = Controller(normal_mem=h_mem, sparse_mem=r2_mem, acc_mem=acc_mem)
+    controller.execute()
+
 
 if __name__ == "__main__":
     main()
