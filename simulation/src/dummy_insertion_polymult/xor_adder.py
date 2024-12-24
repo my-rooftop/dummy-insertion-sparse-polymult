@@ -18,13 +18,13 @@ class XORAdder:
         
         return ''.join(result)
         
-    def concatenate_words(self, word1: int, word2: int) -> int:
-        result = ((word1 & 0xFFFFFFFF) << 32) | (word2 & 0xFFFFFFFF)
+    def concatenate_words(self, word_left: int, word_right: int) -> int:
+        result = ((word_left & 0xFFFFFFFF) << 32) | (word_right & 0xFFFFFFFF)
         if self.debug_mode:
             self.debug_print(f"\nConcatenation:")
-            self.debug_print(f"Word1:    {word1:032b} ({word1})")
-            self.debug_print(f"Word2:    {word2:032b} ({word2})")
-            self.debug_print(f"Combined: {result:064b} ({result})")
+            self.debug_print(f"Word_left :    {word_left:032b} ({word_left})")
+            self.debug_print(f"Word_right:    {word_right:032b} ({word_right})")
+            self.debug_print(f"Combined  : {result:064b} ({result})")
         return result
         
     def extract_bits(self, value: int, start: int, length: int) -> int:
@@ -49,10 +49,10 @@ class XORAdder:
         if self.debug_mode:
             self.debug_print("\n=== XOR Operation Start ===")
             self.debug_print("Input values:")
-            self.debug_print(f"Normal High Left:  {normal_high_word_left:032b}")
+            self.debug_print(f"Normal High Left :  {normal_high_word_left:032b}")
             self.debug_print(f"Normal High Right: {normal_high_word_right:032b}")
-            self.debug_print(f"Normal Low Left:   {normal_low_word_left:032b}")
-            self.debug_print(f"Normal Low Right:  {normal_low_word_right:032b}")
+            self.debug_print(f"Normal Low Left  :   {normal_low_word_left:032b}")
+            self.debug_print(f"Normal Low Right :  {normal_low_word_right:032b}")
             self.debug_print(f"Acc Poly:         {acc_poly:032b}")
             
         # Concatenate word pairs

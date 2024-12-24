@@ -2,6 +2,7 @@ from data_loader import DataLoader
 from memory import PolynomialMemory
 from dummy_insertion import DummyInsertion
 from controller import Controller
+from result_verifier import ResultVerifier
 
 def main():
     # 데이터 로드
@@ -23,12 +24,6 @@ def main():
 
     acc_mem = PolynomialMemory(total_bits=17669, word_size=32)
 
-
-
-
-
-
-
     # # Print overall analysis
     # dummy_inserter.print_analysis(r2_positions, r2_positions_with_dummies, r2_packed_words)
     
@@ -42,6 +37,29 @@ def main():
     # Create controller for polynomial multiplication
     controller = Controller(normal_mem=h_mem, sparse_mem=r2_mem, acc_mem=acc_mem)
     controller.execute()
+
+    # verifier = ResultVerifier(acc_mem, result_positions)
+    # verifier.print_report()
+
+
+    #이거 밑에 전부 비트표현으로 변경해줘
+
+    # print("[541]:", h_mem.get_word_binary(541))
+    # print("[542]:", h_mem.get_word_binary(542))
+    # print("[543]:", h_mem.get_word_binary(543))
+    # print("[544]:", h_mem.get_word_binary(544))
+    # print("[545]:", h_mem.get_word_binary(545))
+    # print("[546]:", h_mem.get_word_binary(546))
+    # print("[547]:", h_mem.get_word_binary(547))
+    # print("[548]:", h_mem.get_word_binary(548))
+    # print("[549]:", h_mem.get_word_binary(549))
+    # print("[550]:", h_mem.get_word_binary(550))
+    # print("[551]:", h_mem.get_word_binary(551))
+    # print("[552]:", h_mem.get_word_binary(552))
+    # print("[0] :", h_mem.get_word_binary(0))
+    # print("[1] :", h_mem.get_word_binary(1))
+    # print("[2] :", h_mem.get_word_binary(2))
+    # print("[3] :", h_mem.get_word_binary(3))
 
 
 if __name__ == "__main__":

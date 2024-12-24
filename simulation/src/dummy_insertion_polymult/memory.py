@@ -52,6 +52,12 @@ class PolynomialMemory:
         """Get entire memory contents"""
         return self.memory.copy()
     
+    def get_word_binary(self, word_idx: int) -> str:
+        """Get word at given index in 32-bit binary format"""
+        if word_idx >= self.num_words:
+            return format(0, '032b')
+        return format(self.memory[word_idx], '032b')
+
     def __str__(self) -> str:
         """String representation showing memory contents in binary"""
         result = []
