@@ -2,12 +2,17 @@ import math
 from typing import List
 
 class PolynomialMemory:
-    def __init__(self, total_bits: int, word_size: int = 32):
+    def __init__(self, total_bits: int, word_size: int = 32, debug_mode: bool = False):
         self.total_bits = total_bits
         self.word_size = word_size
         self.num_words = math.ceil(total_bits / word_size)
         self.memory = [0] * self.num_words
         self.current_word_position = 0
+        self.debug_mode = debug_mode
+        
+    def debug_print(self, message: str) -> None:
+        if self.debug_mode:
+            print(message)
         
     def set_bit_positions(self, positions: List[int]) -> None:
         """Set bits to 1 at given positions"""
@@ -46,7 +51,16 @@ class PolynomialMemory:
     def set_word(self, word_idx: int, value: int) -> None:
         """Set word at given index"""
         if word_idx < self.num_words:
+            old_value = self.memory[word_idx] if self.debug_mode else None
             self.memory[word_idx] = value
+            
+            if self.debug_mode:
+                self.debug_print("\n=== Word Update Details ===")
+                self.debug_print(f"Word Index: {word_idx}")
+                if old_value is not None:
+                    self.debug_print(f"Old Value: {old_value:032b} ({old_value})")
+                self.debug_print(f"New Value: {value:032b} ({value})")
+                self.debug_print("========================\n")
     
     def get_memory(self) -> List[int]:
         """Get entire memory contents"""

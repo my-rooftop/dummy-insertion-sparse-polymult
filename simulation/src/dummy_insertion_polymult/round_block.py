@@ -4,7 +4,7 @@ from xor_adder import XORAdder
 
 class RoundBlock:
     def __init__(self, debug_mode: bool = False):
-        self.normal_poly_queue = deque(maxlen=16)
+        self.normal_poly_queue = deque(maxlen=18)
         self.acc_word: int = 0
         self.sparse_poly_index: int = 0
         self.count: int = 0
@@ -67,7 +67,7 @@ class RoundBlock:
             self.normal_high_word_right = high_right_word
             self.normal_high_word_left = high_left_word
 
-        if self.count < self.normal_sparse_diff:
+        if self.count < self.normal_sparse_diff + 1:
             self.normal_low_word_right = 0
             self.normal_low_word_left = 0
 

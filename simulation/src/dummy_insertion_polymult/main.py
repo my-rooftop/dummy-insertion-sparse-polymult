@@ -2,6 +2,7 @@ from data_loader import DataLoader
 from memory import PolynomialMemory
 from dummy_insertion import DummyInsertion
 from controller import Controller
+from shift_xor_operation import ShiftXorOperations
 from result_verifier import ResultVerifier
 
 def main():
@@ -22,7 +23,7 @@ def main():
     r2_mem = PolynomialMemory(total_bits=1600, word_size=32)
     r2_mem.set_word_positions(r2_packed_words)
 
-    acc_mem = PolynomialMemory(total_bits=17669, word_size=32)
+    acc_mem = PolynomialMemory(total_bits=17669, word_size=32, debug_mode=False)
 
     # # Print overall analysis
     # dummy_inserter.print_analysis(r2_positions, r2_positions_with_dummies, r2_packed_words)
@@ -35,12 +36,24 @@ def main():
     # dummy_inserter.print_packed_words(r2_packed_words, positions_map)
 
     # Create controller for polynomial multiplication
-    controller = Controller(normal_mem=h_mem, sparse_mem=r2_mem, acc_mem=acc_mem)
-    controller.execute()
+    num = 50
 
-    # verifier = ResultVerifier(acc_mem, result_positions)
-    # verifier.print_report()
+    controller = Controller(normal_mem=h_mem, sparse_mem=r2_mem, acc_mem=acc_mem, debug_mode=False)
+    controller.execute(num)
 
+    verifier = ResultVerifier(acc_mem, result_positions)
+    verifier.print_report()
+
+    # ops = ShiftXorOperations()
+    # ops.set_r2_memory(r2_mem)
+    # ops.set_acc_memory(acc_mem)  # acc_mem 설정
+    # ops.set_bits(h_positions)
+    
+    # # r2_mem의 특정 word를 처리
+    # ops.process_r2_word_accumulated(num)  # 첫 번째 word (148, 342) 처리
+    
+    # # 결과 비교
+    # ops.compare_with_acc_mem()
 
     #이거 밑에 전부 비트표현으로 변경해줘
 
