@@ -264,10 +264,6 @@ class Controller:
         """Execute the multiplication operation"""
         # if iter is not None:
 
-        # self.round_block.clear_queue()
-        # self.process_word(49)
-
-
         if iter is None:
             for i in range(self.sparse_mem.num_words):
                 self.round_block.clear_queue()
