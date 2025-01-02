@@ -19,125 +19,44 @@ class Controller:
         if self.debug_mode:
             print(message)
 
-    def _process_shift_greater_than_5(self, normal_word_zero, acc_start_idx, acc_shift_idx, shift_type: str = "high"):
+    def _process_initial_acc(self, normal_word_zero, acc_start_idx, acc_shift_idx, high_shift):
             """Process shift when shift is >= 5 for both high and low cases"""
             normal_word_551 = self.normal_mem.get_word(len(self.normal_mem.memory) - 2)
             normal_word_552 = self.normal_mem.get_word(len(self.normal_mem.memory) - 1)
             acc_word_first = self.acc_mem.get_word(acc_start_idx - 1)
-            
-            if self.debug_mode:
-                self.debug_print(f"\n=== {shift_type.title()} Shift Processing (>= 5) ===")
-                self.debug_print("Input values:")
-                self.debug_print(f"normal_word_zero [0]   : {normal_word_zero:032b}")
-                self.debug_print(f"normal_word_551 [551]  : {normal_word_551:032b}")
-                self.debug_print(f"normal_word_552 [552]  : {normal_word_552:032b}")
-                self.debug_print(f"acc_word_first [{acc_start_idx-1}]: {acc_word_first:032b}")
-                self.debug_print(f"acc_shift_idx          : {acc_shift_idx}")
-            
-            # Extract high bits
-            high_bits = normal_word_zero & ((1 << acc_shift_idx) - 1)
-            if self.debug_mode:
-                self.debug_print("\nHigh bits extraction:")
-                mask = (1 << acc_shift_idx) - 1
-                self.debug_print(f"Source   : {normal_word_zero:032b}")
-                self.debug_print(f"Mask     : {mask:032b}")
-                self.debug_print(f"Extracted: {high_bits:032b}")
-            
-            # Extract mid bits
-            mid_bits = normal_word_552 & ((1 << 5) - 1)
-            if self.debug_mode:
-                self.debug_print("\nMid bits extraction:")
-                mask = (1 << 5) - 1
-                self.debug_print(f"Source   : {normal_word_552:032b}")
-                self.debug_print(f"Mask     : {mask:032b}")
-                self.debug_print(f"Extracted: {mid_bits:05b}")
-            
-            # Extract low bits
-            remaining_bits = 32 - 5 - acc_shift_idx
-            low_bits = (normal_word_551 >> (32 - remaining_bits)) & ((1 << remaining_bits) - 1)
-            if self.debug_mode:
-                self.debug_print("\nLow bits extraction:")
-                self.debug_print(f"Source        : {normal_word_551:032b}")
-                self.debug_print(f"Shift amount  : {32 - remaining_bits}")
-                self.debug_print(f"Remaining bits: {remaining_bits}")
-                self.debug_print(f"Extracted     : {low_bits:b}")
-            
-            # Combine bits
-            combined_word = (high_bits << (32 - acc_shift_idx)) | \
-                        (mid_bits << remaining_bits) | \
-                        low_bits
-            
-            if self.debug_mode:
-                self.debug_print("\nBit combination:")
-                self.debug_print(f"High shifted: {high_bits << (32 - acc_shift_idx):032b}")
-                self.debug_print(f"Mid shifted : {mid_bits << remaining_bits:032b}")
-                self.debug_print(f"Low bits    : {low_bits:032b}")
-                self.debug_print(f"Combined    : {combined_word:032b}")
-            
-            # XOR operation
-            result = acc_word_first ^ combined_word
-            if self.debug_mode:
-                self.debug_print("\nFinal XOR:")
-                self.debug_print(f"Acc word  : {acc_word_first:032b}")
-                self.debug_print(f"Combined  : {combined_word:032b}")
-                self.debug_print(f"Result    : {result:032b}")
-                self.debug_print(f"\n=== {shift_type.title()} Shift Processing End ===\n")
+
+            if high_shift % 32 >= 5:
+                # Extract high bits
+                high_bits = normal_word_zero & ((1 << acc_shift_idx) - 1)
+                
+                # Extract mid bits
+                mid_bits = normal_word_552 & ((1 << 5) - 1)
+                
+                # Extract low bits
+                remaining_bits = 32 - 5 - acc_shift_idx
+                low_bits = (normal_word_551 >> (32 - remaining_bits)) & ((1 << remaining_bits) - 1)
+                
+                # Combine bits
+                combined_word = (high_bits << (32 - acc_shift_idx)) | \
+                            (mid_bits << remaining_bits) | \
+                            low_bits
+                
+                # XOR operation
+                result = acc_word_first ^ combined_word
+            else:
+                shift_remainder = high_shift % 32
+                high_bits = normal_word_zero & ((1 << acc_shift_idx) - 1)
+                
+                # Extract low bits
+                low_bits = (normal_word_552 >> (5 - shift_remainder)) & ((1 << shift_remainder) - 1)
+
+                combined_word = (high_bits << shift_remainder) | low_bits
+
+                result = acc_word_first ^ combined_word
             
             self.acc_mem.set_word(acc_start_idx - 1, result)
             return result
     
-    def _process_shift_less_than_5(self, normal_word_zero, normal_word_552, acc_start_idx, 
-                                    acc_shift_idx, shift_remainder, shift_type: str = "high"):
-            """Process shift when shift is < 5 for both high and low cases"""
-            acc_word_first = self.acc_mem.get_word(acc_start_idx - 1)
-            
-            if self.debug_mode:
-                self.debug_print(f"\n=== {shift_type.title()} Shift Processing (< 5) ===")
-                self.debug_print("Input values:")
-                self.debug_print(f"normal_word_zero [0]   : {normal_word_zero:032b}")
-                self.debug_print(f"normal_word_552 [552]  : {normal_word_552:032b}")
-                self.debug_print(f"acc_word_first [{acc_start_idx-1}]: {acc_word_first:032b}")
-                self.debug_print(f"acc_shift_idx          : {acc_shift_idx}")
-                self.debug_print(f"shift_remainder        : {shift_remainder}")
-            
-            # Extract high bits
-            high_bits = normal_word_zero & ((1 << acc_shift_idx) - 1)
-            if self.debug_mode:
-                self.debug_print("\nHigh bits extraction:")
-                mask = (1 << acc_shift_idx) - 1
-                self.debug_print(f"Source   : {normal_word_zero:032b}")
-                self.debug_print(f"Mask     : {mask:032b}")
-                self.debug_print(f"Extracted: {high_bits:032b}")
-            
-            # Extract low bits
-            low_bits = (normal_word_552 >> (5 - shift_remainder)) & ((1 << shift_remainder) - 1)
-            if self.debug_mode:
-                self.debug_print("\nLow bits extraction:")
-                self.debug_print(f"Source   : {normal_word_552:032b}")
-                self.debug_print(f"Shift    : {5 - shift_remainder}")
-                mask = (1 << shift_remainder) - 1
-                self.debug_print(f"Mask     : {mask:032b}")
-                self.debug_print(f"Extracted: {low_bits:b}")
-            
-            # Combine bits
-            combined_word = (high_bits << shift_remainder) | low_bits
-            if self.debug_mode:
-                self.debug_print("\nBit combination:")
-                self.debug_print(f"High shifted: {high_bits << shift_remainder:032b}")
-                self.debug_print(f"Low bits    : {low_bits:032b}")
-                self.debug_print(f"Combined    : {combined_word:032b}")
-            
-            # XOR operation
-            result = acc_word_first ^ combined_word
-            if self.debug_mode:
-                self.debug_print("\nFinal XOR:")
-                self.debug_print(f"Acc word  : {acc_word_first:032b}")
-                self.debug_print(f"Combined  : {combined_word:032b}")
-                self.debug_print(f"Result    : {result:032b}")
-                self.debug_print(f"\n=== {shift_type.title()} Shift Processing End ===\n")
-            
-            self.acc_mem.set_word(acc_start_idx - 1, result)
-            return result
 
     def _process_initial_shifts(self, normal_word_zero, high_shift, low_shift, 
                                 acc_start_idx_high, acc_start_idx_low,
@@ -145,20 +64,11 @@ class Controller:
                                 ):
             """Process initial high and low shifts before the main loop"""
             # Process high shift
-            normal_word_552 = self.normal_mem.get_word(len(self.normal_mem.memory) - 1)
-
-            if high_shift % 32 >= 5:
-                self._process_shift_greater_than_5(normal_word_zero, acc_start_idx_high + 1, acc_shift_idx_high)
-            else:
-                self._process_shift_less_than_5(normal_word_zero, normal_word_552, 
-                                                acc_start_idx_high + 1, acc_shift_idx_high, high_shift % 32)
             
-            # Process low shift if needed
-            if low_shift % 32 >= 5:
-                self._process_shift_greater_than_5(normal_word_zero, acc_start_idx_low + 1, acc_shift_idx_low)
-            else:
-                self._process_shift_less_than_5(normal_word_zero, normal_word_552,
-                                                acc_start_idx_low + 1, acc_shift_idx_low, low_shift % 32)
+            self._process_initial_acc(normal_word_zero, acc_start_idx_high + 1, acc_shift_idx_high, high_shift)
+
+            self._process_initial_acc(normal_word_zero, acc_start_idx_low + 1, acc_shift_idx_low, low_shift)            
+
 
     def process_word(self, word_idx: int) -> None:
         sparse_word = self.sparse_mem.get_word(word_idx)
