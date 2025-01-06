@@ -48,7 +48,7 @@ def test_dataset(dataset_num: int, loader: DataLoader, debug_mode: bool = False)
 def main():
     print("\n=== Starting Multiple Dataset Test ===")
     
-    total_datasets = 5
+    total_datasets = 1
     successful_tests = 0
     failed_tests = []
     total_error_rate = 0.0

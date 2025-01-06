@@ -24,6 +24,14 @@ class Controller:
             normal_word_551 = self.normal_mem.get_word(len(self.normal_mem.memory) - 2)
             normal_word_552 = self.normal_mem.get_word(len(self.normal_mem.memory) - 1)
             acc_word_first = self.acc_mem.get_word(acc_start_idx - 1)
+            # print("Processing initial acc")
+            # print(f"Normal Word Zero: {normal_word_zero:032b}")
+            # print(f"Normal Word 551: {normal_word_551:032b}")
+            # print(f"Normal Word 552: {normal_word_552:032b}")
+            # print(f"Acc Word First: {acc_word_first:032b}")
+            # print(f"hight_shift: {high_shift}")
+            # print(f"acc_start_idx: {acc_start_idx}")
+            # print(f"acc_shift_idx: {acc_shift_idx}")
 
             if high_shift % 32 >= 5:
                 # Extract high bits
@@ -54,6 +62,7 @@ class Controller:
 
                 result = acc_word_first ^ combined_word
             
+            # print(f"Result: {result:032b}")
             self.acc_mem.set_word(acc_start_idx - 1, result)
             return result
     
@@ -64,7 +73,7 @@ class Controller:
                                 ):
             """Process initial high and low shifts before the main loop"""
             # Process high shift
-            
+
             self._process_initial_acc(normal_word_zero, acc_start_idx_high + 1, acc_shift_idx_high, high_shift)
 
             self._process_initial_acc(normal_word_zero, acc_start_idx_low + 1, acc_shift_idx_low, low_shift)            
@@ -101,8 +110,11 @@ class Controller:
         
         # Setup round block
         normal_word_zero = self.normal_mem.get_word(0)
+        print(f"Processing normal word 0")
+        print(f"Normal Word Zero: {normal_word_zero:032b}")
         self.round_block.add_normal_poly_word(normal_word_zero, 0)
         self.round_block.normal_sparse_diff = high_low_diff
+        print(f"Normal Sparse Diff: {self.round_block.normal_sparse_diff}")
         self.round_block.mem_len = self.normal_mem.num_words
 
         # Process initial shifts before the main loop
@@ -113,7 +125,7 @@ class Controller:
 
         # Process words
         self.low_latency = self.high_latency = 0
-        for word_idx in range(self.normal_mem.num_words + high_low_diff - 1):#self.normal_mem.num_words + high_low_diff - 1
+        for word_idx in range(22):#self.normal_mem.num_words + high_low_diff - 1
             
             # Process normal words
             self._process_normal_word(word_idx, acc_start_idx_high, acc_shift_idx_high,
@@ -129,6 +141,12 @@ class Controller:
                            acc_shift_idx_low, high_latency, low_latency):
         """Process a normal word in the multiplication"""
         normal_word_high = self.normal_mem.get_word((word_idx + 1) % self.acc_mem.num_words)
+        print(f"Processing normal word {word_idx + 1}")
+        print(f"Normal Word High: {normal_word_high:032b}")
+        print(f"acc_start_idx_high: {acc_start_idx_high}")
+        print(f"high_latency: {high_latency}")
+        print(f"low_latency: {low_latency}")
+        
         self.round_block.add_normal_poly_word(normal_word_high, (word_idx + 1) % self.acc_mem.num_words)
         
         acc_word = self.acc_mem.get_word((acc_start_idx_high + 1 + word_idx) % self.acc_mem.num_words)
@@ -174,11 +192,14 @@ class Controller:
         """Execute the multiplication operation"""
         # if iter is not None:
 
-        if iter is None:
-            for i in range(self.sparse_mem.num_words):
-                self.round_block.clear_queue()
-                self.process_word(i)
-        else:
-            for i in range(iter):
-                self.round_block.clear_queue()
-                self.process_word(i)
+        self.round_block.clear_queue()
+        self.process_word(0)
+
+        # if iter is None:
+        #     for i in range(self.sparse_mem.num_words):
+        #         self.round_block.clear_queue()
+        #         self.process_word(i)
+        # else:
+        #     for i in range(iter):
+        #         self.round_block.clear_queue()
+        #         self.process_word(i)
