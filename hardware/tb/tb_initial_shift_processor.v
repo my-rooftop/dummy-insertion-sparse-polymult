@@ -15,17 +15,13 @@ module initial_shift_processor_tb;
     reg [WORD_WIDTH-1:0] normal_word_551;
     reg [WORD_WIDTH-1:0] normal_word_552;
     reg [WORD_WIDTH-1:0] acc_word_high;
-    reg [WORD_WIDTH-1:0] acc_word_low;
     reg [15:0] high_shift;
-    reg [15:0] low_shift;
     reg [9:0] acc_start_idx_high;
-    reg [9:0] acc_start_idx_low;
     reg [4:0] acc_shift_idx_high;
-    reg [4:0] acc_shift_idx_low;
 
     // Output signals
     wire [WORD_WIDTH-1:0] high_result;
-    wire [WORD_WIDTH-1:0] low_result;
+    // wire [WORD_WIDTH-1:0] low_result;
     wire processing_done;
 
     // DUT instantiation
@@ -37,15 +33,10 @@ module initial_shift_processor_tb;
         .normal_word_551(normal_word_551),
         .normal_word_552(normal_word_552),
         .acc_word_high(acc_word_high),
-        .acc_word_low(acc_word_low),
         .high_shift(high_shift),
-        .low_shift(low_shift),
         .acc_start_idx_high(acc_start_idx_high),
-        .acc_start_idx_low(acc_start_idx_low),
         .acc_shift_idx_high(acc_shift_idx_high),
-        .acc_shift_idx_low(acc_shift_idx_low),
         .high_result(high_result),
-        .low_result(low_result),
         .processing_done(processing_done)
     );
 
@@ -66,17 +57,17 @@ module initial_shift_processor_tb;
         normal_word_551 = 32'b00010010011010110010010111010001;
         normal_word_552 = 32'b00000000000000000000000000010101;
         acc_word_high = 32'h0;  // Initial acc word is 0
-        acc_word_low = 32'h0;   // Initial acc word is 0
+        // acc_word_low = 32'h0;   // Initial acc word is 0
         
         // High shift test values
         high_shift = 16'd148;
         acc_start_idx_high = 10'd5;
         acc_shift_idx_high = 4'd12;
         
-        // Low shift test values
-        low_shift = 16'd342;
-        acc_start_idx_low = 10'd11;
-        acc_shift_idx_low = 4'd10;
+        // // Low shift test values
+        // low_shift = 16'd342;
+        // acc_start_idx_low = 10'd11;
+        // acc_shift_idx_low = 4'd10;
 
         // Release reset
         #(CLK_PERIOD*2);
@@ -100,13 +91,13 @@ module initial_shift_processor_tb;
             $display("Got     : %b", high_result);
         end
         
-        if (low_result === 32'b00100111001010100010010011010110) begin
-            $display("Low shift test PASSED");
-        end else begin
-            $display("Low shift test FAILED");
-            $display("Expected: 00100111001010100010010011010110");
-            $display("Got     : %b", low_result);
-        end
+        // if (low_result === 32'b00100111001010100010010011010110) begin
+        //     $display("Low shift test PASSED");
+        // end else begin
+        //     $display("Low shift test FAILED");
+        //     $display("Expected: 00100111001010100010010011010110");
+        //     $display("Got     : %b", low_result);
+        // end
 
         #(CLK_PERIOD*5);
         $finish;

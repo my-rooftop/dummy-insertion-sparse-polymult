@@ -9,20 +9,15 @@ module initial_shift_processor #(
     input wire [WORD_WIDTH-1:0] normal_word_551,
     input wire [WORD_WIDTH-1:0] normal_word_552,
     input wire [WORD_WIDTH-1:0] acc_word_high,
-    input wire [WORD_WIDTH-1:0] acc_word_low,
     
     // Control signals
     input wire [15:0] high_shift,
-    input wire [15:0] low_shift,
     input wire [9:0] acc_start_idx_high,
-    input wire [9:0] acc_start_idx_low,
     input wire [4:0] acc_shift_idx_high,
-    input wire [4:0] acc_shift_idx_low,
     input wire start_process,
     
     // Output interface
     output reg [WORD_WIDTH-1:0] high_result,
-    output reg [WORD_WIDTH-1:0] low_result,
     output reg processing_done
 );
 
@@ -30,10 +25,8 @@ module initial_shift_processor #(
     localparam IDLE         = 3'b000;
     localparam EXTRACT_HIGH = 3'b001;
     localparam COMBINE_HIGH = 3'b010;
-    localparam EXTRACT_LOW  = 3'b011;
-    localparam COMBINE_LOW  = 3'b100;
     
-    reg [2:0] state;
+    reg [1:0] state;
     reg [WORD_WIDTH-1:0] combined_word;
 
     // Function to extract bits based on shifting logic
@@ -72,7 +65,6 @@ module initial_shift_processor #(
             state <= IDLE;
             processing_done <= 0;
             high_result <= 0;
-            low_result <= 0;
         end
         else begin
             case (state)
@@ -90,19 +82,10 @@ module initial_shift_processor #(
                 
                 COMBINE_HIGH: begin
                     high_result <= acc_word_high ^ combined_word;
-                    state <= EXTRACT_LOW;
-                end
-                
-                EXTRACT_LOW: begin
-                    combined_word <= extract_bits(normal_word_zero, normal_word_551, normal_word_552, acc_shift_idx_low, low_shift);
-                    state <= COMBINE_LOW;
-                end
-                
-                COMBINE_LOW: begin
-                    low_result <= acc_word_low ^ combined_word;
                     state <= IDLE;
                     processing_done <= 1;
                 end
+
             endcase
         end
     end
