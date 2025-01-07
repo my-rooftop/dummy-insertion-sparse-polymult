@@ -9,8 +9,8 @@ module xor_adder #( //slice LUTs 247
    input wire [WORD_WIDTH-1:0] acc_poly,
     
    // Start positions
-   input wire [5:0] normal_start,
-   input wire [5:0] sparse_start,
+   input wire [5:0] high_start,
+   input wire [5:0] low_start,
     
    // Output
    output wire [WORD_WIDTH-1:0] result
@@ -27,8 +27,8 @@ module xor_adder #( //slice LUTs 247
    assign normal_low_concat = {normal_low_word_left, normal_low_word_right};
     
    // Extract 32 bits from start positions
-   assign normal_high_bits = normal_high_concat[normal_start +: WORD_WIDTH];
-   assign normal_low_bits = normal_low_concat[sparse_start +: WORD_WIDTH];
+   assign normal_high_bits = normal_high_concat[high_start +: WORD_WIDTH];
+   assign normal_low_bits = normal_low_concat[low_start +: WORD_WIDTH];
     
    // Final XOR
    assign result = acc_poly ^ normal_high_bits ^ normal_low_bits;

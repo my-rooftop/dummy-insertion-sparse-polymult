@@ -80,13 +80,13 @@ class RoundBlock:
             self.normal_low_word_right = low_right_word
             self.normal_low_word_left = low_left_word
 
-        print()
-        print("\n=== Round Block State ===")
-        print(f"Processing Round {self.count}")
-        print(f"high_right_word: {self.normal_high_word_right:032b}")
-        print(f"high_left_word: {self.normal_high_word_left:032b}")
-        print(f"low_right_word: {self.normal_low_word_right:032b}")
-        print(f"low_left_word: {self.normal_low_word_left:032b}")
+        # print()
+        # print("\n=== Round Block State ===")
+        # print(f"Processing Round {self.count}")
+        # print(f"high_right_word: {self.normal_high_word_right:032b}")
+        # print(f"high_left_word: {self.normal_high_word_left:032b}")
+        # print(f"low_right_word: {self.normal_low_word_right:032b}")
+        # print(f"low_left_word: {self.normal_low_word_left:032b}")
             
         if self.debug_mode:
             print("\n=== Processing Round ===")

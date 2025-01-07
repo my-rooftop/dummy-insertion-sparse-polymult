@@ -18,6 +18,10 @@ def test_dataset(dataset_num: int, loader: DataLoader, debug_mode: bool = False)
     # Initialize memories
     h_mem = PolynomialMemory(total_bits=17669, word_size=32)
     h_mem.set_bit_positions(h_positions)
+    
+
+    for i in range(553):
+        print(f'normal_words[{i}] = 32\'b{h_mem.get_word(i):032b};')
 
     # Process r2 positions with dummy insertion
     dummy_inserter = DummyInsertion()

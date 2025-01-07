@@ -141,11 +141,11 @@ class Controller:
                            acc_shift_idx_low, high_latency, low_latency):
         """Process a normal word in the multiplication"""
         normal_word_high = self.normal_mem.get_word((word_idx + 1) % self.acc_mem.num_words)
-        print(f"Processing normal word {word_idx + 1}")
-        print(f"Normal Word High: {normal_word_high:032b}")
-        print(f"acc_start_idx_high: {acc_start_idx_high}")
-        print(f"high_latency: {high_latency}")
-        print(f"low_latency: {low_latency}")
+        # print(f"Processing normal word {word_idx + 1}")
+        # print(f"Normal Word High: {normal_word_high:032b}")
+        # print(f"acc_start_idx_high: {acc_start_idx_high}")
+        # print(f"high_latency: {high_latency}")
+        # print(f"low_latency: {low_latency}")
         
         self.round_block.add_normal_poly_word(normal_word_high, (word_idx + 1) % self.acc_mem.num_words)
         
