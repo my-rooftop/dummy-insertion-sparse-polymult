@@ -35,7 +35,7 @@ module round_block #(
     reg [1:0] state;
     reg [WORD_WIDTH-1:0] word_queue [0:QUEUE_SIZE-1];
     reg [5:0] queue_count;
-    reg [5:0] process_count;
+    reg [9:0] process_count;
     integer i;
 
     always @(posedge clk or negedge rst_n) begin

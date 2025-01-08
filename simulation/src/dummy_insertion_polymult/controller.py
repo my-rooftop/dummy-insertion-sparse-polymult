@@ -125,7 +125,7 @@ class Controller:
 
         # Process words
         self.low_latency = self.high_latency = 0
-        for word_idx in range(550):#self.normal_mem.num_words + high_low_diff - 1
+        for word_idx in range(self.normal_mem.num_words + high_low_diff - 1):#self.normal_mem.num_words + high_low_diff - 1
             
             # Process normal words
             self._process_normal_word(word_idx, acc_start_idx_high, acc_shift_idx_high,

@@ -285,7 +285,8 @@ module controller #(
 
                 LOAD_NEXT_WORD: begin
                     if(round_processing_done) begin
-                        normal_mem_addr_o <= round_counter % MEM_SIZE;
+                        normal_mem_addr_o <= round_counter;
+
                         acc_mem_addr_o <= (acc_start_idx_high + round_counter - 1) % MEM_SIZE;
                         state <= PROCESS_ROUND;
 
@@ -318,6 +319,9 @@ module controller #(
                 end
 
                 PROCESS_ROUND: begin
+                    if(round_counter == MEM_SIZE - 1 + acc_start_idx_high) begin
+                            process_done <= 1;
+                    end
                     if (round_ready) begin
                         round_word_valid <= 1;
                         only_add <= 0;

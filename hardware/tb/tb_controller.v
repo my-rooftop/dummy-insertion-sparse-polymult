@@ -675,28 +675,77 @@ module tb_controller();
             wait(normal_mem_addr_o == i);
             #(CLK_PERIOD);
             acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-            normal_mem_data = normal_words[i];
+            normal_mem_data = normal_words[i % MEM_SIZE];
         end
 
         wait(normal_mem_addr_o == 549);
         #(CLK_PERIOD);
         acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[549];
+        normal_mem_data = normal_words[549 % MEM_SIZE];
 
         wait(normal_mem_addr_o == 550);
         #(CLK_PERIOD);//full
         acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[550];
+        normal_mem_data = normal_words[550 % MEM_SIZE   ];
 
         wait(normal_mem_addr_o == 551);
         #(CLK_PERIOD);
         acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[551];
+        normal_mem_data = normal_words[551 % MEM_SIZE];
 
         wait(normal_mem_addr_o == 552);
         #(CLK_PERIOD);
         acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[552];
+        normal_mem_data = normal_words[552 % MEM_SIZE];
+
+        wait(normal_mem_addr_o == 553);
+        #(CLK_PERIOD);
+        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+        normal_mem_data = normal_words[553 % MEM_SIZE];
+
+        wait(normal_mem_addr_o == 554);
+        #(CLK_PERIOD);
+        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+        normal_mem_data = normal_words[554 % MEM_SIZE];
+
+        wait(normal_mem_addr_o == 555);
+        #(CLK_PERIOD);
+        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+        normal_mem_data = normal_words[555 % MEM_SIZE];
+
+        wait(normal_mem_addr_o == 556);
+        #(CLK_PERIOD);
+        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+        normal_mem_data = normal_words[556 % MEM_SIZE];
+
+        wait(normal_mem_addr_o == 557);
+        #(CLK_PERIOD);
+        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+        normal_mem_data = normal_words[557 % MEM_SIZE];
+
+        wait(normal_mem_addr_o == 558);
+        #(CLK_PERIOD);
+        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+        normal_mem_data = normal_words[558 % MEM_SIZE];
+
+        wait(normal_mem_addr_o == 559);
+        #(CLK_PERIOD);
+        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+        normal_mem_data = normal_words[559 % MEM_SIZE];
+
+        wait(normal_mem_addr_o == 560);
+        #(CLK_PERIOD);
+        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+        normal_mem_data = normal_words[560 % MEM_SIZE];
+
+        wait(normal_mem_addr_o == 561);
+
+
+
+        #(CLK_PERIOD)
+        #(CLK_PERIOD);
+        #(CLK_PERIOD);
+
 
         // Wait for process completion
         wait(process_done);
