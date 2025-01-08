@@ -285,14 +285,34 @@ module controller #(
 
                 LOAD_NEXT_WORD: begin
                     if(round_processing_done) begin
-                        normal_mem_addr_o <= round_counter;
-                        acc_mem_addr_o <= acc_start_idx_high + round_counter - 1;
+                        normal_mem_addr_o <= round_counter % MEM_SIZE;
+                        acc_mem_addr_o <= (acc_start_idx_high + round_counter - 1) % MEM_SIZE;
                         state <= PROCESS_ROUND;
 
                         if(round_counter > 1) begin
                             acc_mem_write_en <= 1;
                             acc_mem_write_data <= xor_adder_result;
                         end
+
+                        if(round_counter + 1 == MEM_SIZE - 3) begin
+                            if(high_shift % 32 >= 5) begin
+                                high_latency <= 1;
+                                high_start <= acc_shift_idx_high + 5;
+                            end else begin
+                                high_latency <= 0;
+                                high_start <= 5 - high_shift % 32;
+                            end 
+
+                            if(low_shift % 32 >= 5) begin
+                                low_latency <= 1;
+                                low_start <= acc_shift_idx_low + 5;
+                            end else begin
+                                low_latency <= 0;
+                                low_start <= 5 - low_shift % 32;
+                            end
+                        end
+
+                        
                         
                     end
                 end

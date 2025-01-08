@@ -10,7 +10,7 @@ class Controller:
         self.acc_mem = acc_mem
         self.word_size = 32
         self.debug_mode = debug_mode
-        self.round_block = RoundBlock(debug_mode=debug_mode)
+        self.round_block = RoundBlock(debug_mode=False)
         self.xor_adder = XORAdder(debug_mode=debug_mode)
         self.low_latency = 0
         self.high_latency = 0
@@ -125,7 +125,7 @@ class Controller:
 
         # Process words
         self.low_latency = self.high_latency = 0
-        for word_idx in range(22):#self.normal_mem.num_words + high_low_diff - 1
+        for word_idx in range(550):#self.normal_mem.num_words + high_low_diff - 1
             
             # Process normal words
             self._process_normal_word(word_idx, acc_start_idx_high, acc_shift_idx_high,

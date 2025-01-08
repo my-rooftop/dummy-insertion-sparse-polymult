@@ -20,8 +20,8 @@ def test_dataset(dataset_num: int, loader: DataLoader, debug_mode: bool = False)
     h_mem.set_bit_positions(h_positions)
     
 
-    for i in range(553):
-        print(f'normal_words[{i}] = 32\'b{h_mem.get_word(i):032b};')
+    # for i in range(553):
+    #     print(f'normal_words[{i}] = 32\'b{h_mem.get_word(i):032b};')
 
     # Process r2 positions with dummy insertion
     dummy_inserter = DummyInsertion()
@@ -63,7 +63,7 @@ def main():
     try:
         for dataset_num in range(total_datasets):
             print(f"\nTesting dataset {dataset_num}...")
-            success, error_rate = test_dataset(dataset_num, loader, debug_mode=False)
+            success, error_rate = test_dataset(dataset_num, loader, debug_mode=True)
             
             if success:
                 successful_tests += 1
