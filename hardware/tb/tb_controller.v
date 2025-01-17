@@ -8,8 +8,12 @@ module tb_controller();
     parameter CLK_PERIOD = 10;
 
     // Test data - Normal words array
-    reg [WORD_WIDTH-1:0] normal_words [0:MEM_SIZE - 1]; // Adjusted size for 17669 bits
+    reg [WORD_WIDTH-1:0] normal_words [0:MEM_SIZE - 1];
     reg [WORD_WIDTH-1:0] acc_words [0:MEM_SIZE - 1];
+    
+    // Sparse memory data pairs
+    reg [31:0] sparse_pairs [0:MEM_SPARSE_SIZE-1];
+
     // Signals
     reg clk;
     reg rst_n;
@@ -20,6 +24,11 @@ module tb_controller();
     reg [9:0] sparse_mem_addr_i;
     reg [9:0] acc_mem_addr_i;
     reg start_process;
+
+    reg [9:0] acc_start_idx_high;
+    reg [9:0] acc_start_idx_low;
+    reg [4:0] high_low_diff;
+
 
     wire [WORD_WIDTH-1:0] acc_mem_write_data;
     wire acc_mem_write_en;
@@ -37,8 +46,10 @@ module tb_controller();
 
     // Declare integer for loop iteration
     integer i;
+    integer pair_idx;
     integer word_index;
     integer bit_index;
+
 
     // Declare bit_positions array
     
@@ -632,117 +643,113 @@ module tb_controller();
         normal_words[552] = 32'b00000000000000000000000000010101;
         // Example bit positions from CSV (replace with actual data)
 
+        // Initialize sparse pairs
+        sparse_pairs[0] = {16'd148, 16'd342};
+        sparse_pairs[1] = {16'd414, 16'd605};
+        sparse_pairs[2] = {16'd627, 16'd1031};
+        sparse_pairs[3] = {16'd1031, 16'd1435};
+        sparse_pairs[4] = {16'd1478, 16'd1545};
+        sparse_pairs[5] = {16'd1957, 16'd2201};
+        sparse_pairs[6] = {16'd2201, 16'd2446};
+        sparse_pairs[7] = {16'd2624, 16'd2794};
+        sparse_pairs[8] = {16'd2794, 16'd2964};
+        sparse_pairs[9] = {16'd3004, 16'd3015};
+        sparse_pairs[10] = {16'd3037, 16'd3399};
+        sparse_pairs[11] = {16'd3399, 16'd3761};
+        sparse_pairs[12] = {16'd3761, 16'd4123};
+        sparse_pairs[13] = {16'd4137, 16'd4166};
+        sparse_pairs[14] = {16'd4167, 16'd4366};
+        sparse_pairs[15] = {16'd4556, 16'd4690};
+        sparse_pairs[16] = {16'd4690, 16'd4825};
+        sparse_pairs[17] = {16'd6724, 16'd6816};
+        sparse_pairs[18] = {16'd6913, 16'd7064};
+        sparse_pairs[19] = {16'd7337, 16'd7526};
+        sparse_pairs[20] = {16'd7848, 16'd8013};
+        sparse_pairs[21] = {16'd8013, 16'd8179};
+        sparse_pairs[22] = {16'd8463, 16'd8606};
+        sparse_pairs[23] = {16'd8927, 16'd9048};
+        sparse_pairs[24] = {16'd9048, 16'd9169};
+        sparse_pairs[25] = {16'd9242, 16'd9552};
+        sparse_pairs[26] = {16'd9552, 16'd9863};
+        sparse_pairs[27] = {16'd9921, 16'd9924};
+        sparse_pairs[28] = {16'd10272, 16'd10406};
+        sparse_pairs[29] = {16'd10406, 16'd10540};
+        sparse_pairs[30] = {16'd10560, 16'd10646};
+        sparse_pairs[31] = {16'd10914, 16'd11115};
+        sparse_pairs[32] = {16'd11115, 16'd11317};
+        sparse_pairs[33] = {16'd11348, 16'd11458};
+        sparse_pairs[34] = {16'd11458, 16'd11569};
+        sparse_pairs[35] = {16'd12390, 16'd12640};
+        sparse_pairs[36] = {16'd12640, 16'd12891};
+        sparse_pairs[37] = {16'd13089, 16'd13117};
+        sparse_pairs[38] = {16'd13120, 16'd13348};
+        sparse_pairs[39] = {16'd13348, 16'd13577};
+        sparse_pairs[40] = {16'd14633, 16'd14653};
+        sparse_pairs[41] = {16'd14772, 16'd15122};
+        sparse_pairs[42] = {16'd15122, 16'd15473};
+        sparse_pairs[43] = {16'd15607, 16'd15690};
+        sparse_pairs[44] = {16'd15761, 16'd15803};
+        sparse_pairs[45] = {16'd16003, 16'd16262};
+        sparse_pairs[46] = {16'd16262, 16'd16522};
+        sparse_pairs[47] = {16'd16575, 16'd16721};
+        sparse_pairs[48] = {16'd16721, 16'd16868};
+        sparse_pairs[49] = {16'd16888, 16'd17336};
         
 
         // Reset
         rst_n = 0;
+        start_process = 0;
         #(CLK_PERIOD * 2);
         rst_n = 1;
         #(CLK_PERIOD);
-        
-        // Start test
-        sparse_mem_addr_i = 0;
-        sparse_mem_data = {16'd148, 16'd342}; // high_shift = 148, low_shift = 5
-        start_process = 1;
-        #(CLK_PERIOD);
-        // start_process = 0;
 
-        // Provide normal memory data when requested
-        wait(normal_mem_addr_o == 0);
-        #(CLK_PERIOD);
-        normal_mem_data = normal_words[0];
-
-        wait(normal_mem_addr_o == 551);
-        #(CLK_PERIOD);
-        normal_mem_data = 32'b00010010011010110010010111010001;
-
-        wait(normal_mem_addr_o == 552);
-        #(CLK_PERIOD);
-        normal_mem_data = 32'b00000000000000000000000000010101;
-
-        // Provide accumulator memory data based on acc_mem_addr_o
-        wait(acc_mem_addr_o == (148 >> 5)); // Wait for high shift address
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[acc_mem_addr_o]; // Initial acc data is 0
-        
-        wait(acc_mem_addr_o == (342 >> 5)); // Wait for low shift address
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[acc_mem_addr_o]; // Initial acc data is 0
-
-        #(CLK_PERIOD);
-
-        for (i = 1; i < 549; i = i + 1) begin
-            wait(normal_mem_addr_o == i);
+        for(pair_idx = 0; pair_idx < MEM_SPARSE_SIZE; pair_idx = pair_idx + 1) begin
+            sparse_mem_addr_i = pair_idx;
+            sparse_mem_data = sparse_pairs[pair_idx];
+            start_process = 1;
             #(CLK_PERIOD);
-            acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-            normal_mem_data = normal_words[i % MEM_SIZE];
+
+            // Provide normal memory data when requested
+            wait(normal_mem_addr_o == 0);
+            #(CLK_PERIOD);
+            normal_mem_data = normal_words[0];
+
+            wait(normal_mem_addr_o == 551);
+            #(CLK_PERIOD);
+            normal_mem_data = normal_words[551];
+
+            wait(normal_mem_addr_o == 552);
+            #(CLK_PERIOD);
+            normal_mem_data = normal_words[552];
+
+            acc_start_idx_high = sparse_mem_data[31:16] >> 5;  // 상위 16비트를 선택하고 32로 나눔
+            acc_start_idx_low = sparse_mem_data[15:0] >> 5;    // 하위 16비트를 선택하고 32로 나눔
+
+            high_low_diff = acc_start_idx_low - acc_start_idx_high;
+
+            // Provide accumulator memory data based on acc_mem_addr_o
+            wait(acc_mem_addr_o == acc_start_idx_high); // Wait for high shift address
+            #(CLK_PERIOD);
+            acc_mem_data = acc_words[acc_mem_addr_o]; // Initial acc data is 0
+            
+            wait(acc_mem_addr_o == acc_start_idx_low); // Wait for low shift address
+            #(CLK_PERIOD);
+            acc_mem_data = acc_words[acc_mem_addr_o]; // Initial acc data is 0
+
+            #(CLK_PERIOD);
+
+            for (i = 1; i < MEM_SIZE + high_low_diff + 2; i = i + 1) begin
+                wait(normal_mem_addr_o == i);
+                #(CLK_PERIOD);
+                acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+                normal_mem_data = normal_words[i % MEM_SIZE];
+            end
+
+            #(CLK_PERIOD*100);
         end
 
-        wait(normal_mem_addr_o == 549);
+
         #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[549 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 550);
-        #(CLK_PERIOD);//full
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[550 % MEM_SIZE   ];
-
-        wait(normal_mem_addr_o == 551);
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[551 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 552);
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[552 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 553);
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[553 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 554);
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[554 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 555);
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[555 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 556);
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[556 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 557);
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[557 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 558);
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[558 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 559);
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[559 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 560);
-        #(CLK_PERIOD);
-        acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-        normal_mem_data = normal_words[560 % MEM_SIZE];
-
-        wait(normal_mem_addr_o == 561);
-
-
-
-        #(CLK_PERIOD)
         #(CLK_PERIOD);
         #(CLK_PERIOD);
 
