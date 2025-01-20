@@ -694,16 +694,16 @@ module tb_controller();
         sparse_pairs[47] = {16'd16575, 16'd16721};
         sparse_pairs[48] = {16'd16721, 16'd16868};
         sparse_pairs[49] = {16'd16888, 16'd17336};
-        
-
-        // Reset
+                
         rst_n = 0;
         start_process = 0;
         #(CLK_PERIOD * 2);
         rst_n = 1;
         #(CLK_PERIOD);
 
+
         for(pair_idx = 0; pair_idx < MEM_SPARSE_SIZE; pair_idx = pair_idx + 1) begin
+
             sparse_mem_addr_i = pair_idx;
             sparse_mem_data = sparse_pairs[pair_idx];
             start_process = 1;
@@ -738,16 +738,32 @@ module tb_controller();
 
             #(CLK_PERIOD);
 
-            for (i = 1; i < MEM_SIZE + high_low_diff + 2; i = i + 1) begin
+            // First handle the main loop up to 19 iterations before the end
+            for (i = 1; i < MEM_SIZE + high_low_diff + 1 - 19; i = i + 1) begin
                 wait(normal_mem_addr_o == i);
                 #(CLK_PERIOD);
                 acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
                 normal_mem_data = normal_words[i % MEM_SIZE];
             end
 
-            #(CLK_PERIOD*100);
-        end
+            // Then handle the last 19 iterations separately
+            for (i = MEM_SIZE + high_low_diff + 1 - 19; i < MEM_SIZE + high_low_diff + 1; i = i + 1) begin
+                wait(normal_mem_addr_o == i);
+                #(CLK_PERIOD);
+                acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+                normal_mem_data = normal_words[i % MEM_SIZE];
+            end
 
+
+            // Wait for process_done signal before moving to next iteration
+            wait(process_done);
+            
+            rst_n = 0;
+            start_process = 0;
+            #(CLK_PERIOD * 2);
+            rst_n = 1;
+            #(CLK_PERIOD);
+        end
 
         #(CLK_PERIOD);
         #(CLK_PERIOD);
