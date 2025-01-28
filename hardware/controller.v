@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module controller #(
     parameter WORD_WIDTH = 32,
     parameter MEM_SIZE = 553,    // Total memory size in words
@@ -12,7 +10,9 @@ module controller #(
     input wire [WORD_WIDTH-1:0] normal_mem_data,
     input wire [WORD_WIDTH-1:0] sparse_mem_data,
     input wire [WORD_WIDTH-1:0] acc_mem_data,
+    input wire [9:0] normal_mem_addr_i,
     input wire [9:0] sparse_mem_addr_i,
+    input wire [9:0] acc_mem_addr_i,
 
     output reg [WORD_WIDTH-1:0] acc_mem_write_data,
     output reg acc_mem_write_en,
@@ -295,7 +295,7 @@ module controller #(
                             acc_mem_write_data <= xor_adder_result;
                         end
 
-                        if(round_counter + 1 == MEM_SIZE - 3) begin
+                        if(round_counter == MEM_SIZE - acc_start_idx_high ) begin
                             if(high_shift % 32 >= 5) begin
                                 high_latency <= 1;
                                 high_start <= acc_shift_idx_high + 5;
@@ -319,13 +319,15 @@ module controller #(
                 end
 
                 PROCESS_ROUND: begin
-                    if(round_counter == MEM_SIZE - 1 + acc_start_idx_high) begin
-                            process_done <= 1;
+                    if(round_counter == MEM_SIZE - 1 + acc_start_idx_low - acc_start_idx_high) begin
+                        process_done <= 1;
+                        acc_mem_write_en <= 0;
+                        state <= IDLE;  // Add this line to return to IDLE state
+                        busy <= 0;      // Add this line to clear busy flag
                     end
                     if (round_ready) begin
                         round_word_valid <= 1;
                         only_add <= 0;
-
                         normal_word_in <= normal_mem_data;
                         round_counter <= round_counter + 1;
                         state <= LOAD_NEXT_WORD;
