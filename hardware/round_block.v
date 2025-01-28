@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module round_block #(
     parameter WORD_WIDTH = 32,
     parameter QUEUE_SIZE = 19,

@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module xor_adder #( //slice LUTs 247
    parameter WORD_WIDTH = 32
 )(

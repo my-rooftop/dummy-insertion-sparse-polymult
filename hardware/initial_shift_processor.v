@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module initial_shift_processor #(
     parameter WORD_WIDTH = 32
 )(
