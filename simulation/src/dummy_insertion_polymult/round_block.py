@@ -1,6 +1,5 @@
 from collections import deque
 from typing import List, Optional
-from xor_adder import XORAdder
 
 class RoundBlock:
     def __init__(self, debug_mode: bool = False):
@@ -53,7 +52,8 @@ class RoundBlock:
         self.count += 1
 
 
-        
+        print("self.get_queue_size(): ", self.get_queue_size())
+        print("self.normal_sparse_diff: ", self.normal_sparse_diff)
         if self.count >= self.mem_len:
             self.normal_high_word_right = 0
             self.normal_high_word_left = 0

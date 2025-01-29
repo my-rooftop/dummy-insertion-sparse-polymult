@@ -2,3 +2,5 @@
 /simulation/sparse_poly/
 /simulation/src/dummy_insertion_polymult/__pycache__/
 /simulation/src/original/__pycache__/
+.vscode/
+*.pyc
