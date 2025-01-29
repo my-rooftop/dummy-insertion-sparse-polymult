@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_controller();
+module tb_polymult();
     // Parameters
     parameter WORD_WIDTH = 32;
     parameter MEM_SIZE = 553;
@@ -20,9 +20,7 @@ module tb_controller();
     reg [WORD_WIDTH-1:0] normal_mem_data;
     reg [WORD_WIDTH-1:0] sparse_mem_data;
     reg [WORD_WIDTH-1:0] acc_mem_data;
-    reg [9:0] normal_mem_addr_i;
     reg [9:0] sparse_mem_addr_i;
-    reg [9:0] acc_mem_addr_i;
     reg start_process;
 
     reg [9:0] acc_start_idx_high;
@@ -66,9 +64,7 @@ module tb_controller();
         .normal_mem_data(normal_mem_data),
         .sparse_mem_data(sparse_mem_data),
         .acc_mem_data(acc_mem_data),
-        .normal_mem_addr_i(normal_mem_addr_i),
         .sparse_mem_addr_i(sparse_mem_addr_i),
-        .acc_mem_addr_i(acc_mem_addr_i),
         .acc_mem_write_data(acc_mem_write_data),
         .acc_mem_write_en(acc_mem_write_en),
         .normal_mem_addr_o(normal_mem_addr_o),

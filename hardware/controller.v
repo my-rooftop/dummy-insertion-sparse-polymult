@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module controller #(
     parameter WORD_WIDTH = 32,
     parameter MEM_SIZE = 553,    // Total memory size in words
@@ -10,9 +12,7 @@ module controller #(
     input wire [WORD_WIDTH-1:0] normal_mem_data,
     input wire [WORD_WIDTH-1:0] sparse_mem_data,
     input wire [WORD_WIDTH-1:0] acc_mem_data,
-    input wire [9:0] normal_mem_addr_i,
     input wire [9:0] sparse_mem_addr_i,
-    input wire [9:0] acc_mem_addr_i,
 
     output reg [WORD_WIDTH-1:0] acc_mem_write_data,
     output reg acc_mem_write_en,
