@@ -235,7 +235,7 @@ module tb_shift_register;
     // Generate VCD file
     initial begin
         $dumpfile("shift_register.vcd");
-        $dumpvars(0, shift_register_tb);
+        $dumpvars(0, tb_shift_register);
     end
 
 endmodule

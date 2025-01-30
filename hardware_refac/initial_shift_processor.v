@@ -10,16 +10,15 @@ module initial_shift_processor #(
     input wire [WORD_WIDTH-1:0] normal_word_zero,
     input wire [WORD_WIDTH-1:0] normal_word_551,
     input wire [WORD_WIDTH-1:0] normal_word_552,
-    input wire [WORD_WIDTH-1:0] acc_word_high,
+    input wire [WORD_WIDTH-1:0] acc_word_i,
     
     // Control signals
-    input wire [15:0] high_shift,
-    input wire [9:0] acc_start_idx_high,
-    input wire [4:0] acc_shift_idx_high,
+    input wire [15:0] shift,
+    input wire [4:0] acc_shift_idx,
     input wire start_process,
     
     // Output interface
-    output reg [WORD_WIDTH-1:0] high_result,
+    output reg [WORD_WIDTH-1:0] result,
     output reg processing_done
 );
 
@@ -66,28 +65,29 @@ module initial_shift_processor #(
         if (!rst_n) begin
             state <= IDLE;
             processing_done <= 0;
-            high_result <= 0;
+            result <= 0;
         end
         else begin
             case (state)
                 IDLE: begin
+                    processing_done <= 0;  // Reset processing_done in IDLE state
                     if (start_process) begin
                         state <= EXTRACT_HIGH;
-                        processing_done <= 0;
                     end
                 end
                 
                 EXTRACT_HIGH: begin
-                    combined_word <= extract_bits(normal_word_zero, normal_word_551, normal_word_552, acc_shift_idx_high, high_shift);
+                    combined_word <= extract_bits(normal_word_zero, normal_word_551, normal_word_552, acc_shift_idx, shift);
                     state <= COMBINE_HIGH;
                 end
                 
                 COMBINE_HIGH: begin
-                    high_result <= acc_word_high ^ combined_word;
-                    state <= IDLE;
+                    result <= acc_word_i ^ combined_word;
                     processing_done <= 1;
+                    state <= IDLE;
                 end
 
+                default: state <= IDLE;
             endcase
         end
     end

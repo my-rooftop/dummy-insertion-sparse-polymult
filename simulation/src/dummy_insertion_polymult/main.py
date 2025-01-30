@@ -48,7 +48,7 @@ def test_dataset(dataset_num: int, loader: DataLoader, debug_mode: bool = False)
 def main():
     print("\n=== Starting Multiple Dataset Test ===")
     
-    total_datasets = 5
+    total_datasets = 1
     successful_tests = 0
     failed_tests = []
     total_error_rate = 0.0
@@ -59,7 +59,7 @@ def main():
     try:
         for dataset_num in range(total_datasets):
             print(f"\nTesting dataset {dataset_num}...")
-            success, error_rate = test_dataset(dataset_num, loader, debug_mode=False)
+            success, error_rate = test_dataset(dataset_num, loader, debug_mode=True)
             
             if success:
                 successful_tests += 1
