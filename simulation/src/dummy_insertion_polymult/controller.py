@@ -1,7 +1,7 @@
 from typing import List
 from memory import PolynomialMemory
-from round_block import RoundBlock
 from xor_adder import XORAdder
+from shift_register import ShiftRegister
 
 class Controller:
     def __init__(self, normal_mem, sparse_mem, acc_mem, debug_mode: bool = False):
@@ -10,10 +10,11 @@ class Controller:
         self.acc_mem = acc_mem
         self.word_size = 32
         self.debug_mode = debug_mode
-        self.round_block = RoundBlock(debug_mode=debug_mode)
         self.xor_adder = XORAdder(debug_mode=debug_mode)
+        self.shift_register = ShiftRegister(debug_mode=debug_mode)
         self.low_latency = 0
         self.high_latency = 0
+        self.high_low_diff = 0
 
     def debug_print(self, message: str) -> None:
         if self.debug_mode:
@@ -57,20 +58,7 @@ class Controller:
             # print(f"Result: {result:032b}")
             self.acc_mem.set_word(acc_start_idx - 1, result)
             return result
-    
-
-    def _process_initial_shifts(self, normal_word_zero, high_shift, low_shift, 
-                                acc_start_idx_high, acc_start_idx_low,
-                                acc_shift_idx_high, acc_shift_idx_low,
-                                ):
-            """Process initial high and low shifts before the main loop"""
-            # Process high shift
-
-            self._process_initial_acc(normal_word_zero, acc_start_idx_high + 1, acc_shift_idx_high, high_shift)
-
-            self._process_initial_acc(normal_word_zero, acc_start_idx_low + 1, acc_shift_idx_low, low_shift)            
-
-
+              
     def process_word(self, word_idx: int) -> None:
         sparse_word = self.sparse_mem.get_word(word_idx)
         
@@ -83,7 +71,7 @@ class Controller:
         acc_shift_idx_high = 32 - (high_shift % 32)
         acc_start_idx_low = (low_shift // 32)
         acc_shift_idx_low = 32 - (low_shift % 32)
-        high_low_diff = acc_start_idx_low - acc_start_idx_high
+        self.high_low_diff = acc_start_idx_low - acc_start_idx_high
 
         if self.debug_mode:
             self.debug_print("\n=== Processing Word Parameters ===")
@@ -97,64 +85,78 @@ class Controller:
             self.debug_print(f"acc_shift_idx_high: {acc_shift_idx_high}")
             self.debug_print(f"acc_start_idx_low: {acc_start_idx_low}")
             self.debug_print(f"acc_shift_idx_low: {acc_shift_idx_low}")
-            self.debug_print(f"high_low_diff: {high_low_diff}")
+            self.debug_print(f"high_low_diff: {self.high_low_diff}")
             self.debug_print("===================================\n")
         
         # Setup round block
         normal_word_zero = self.normal_mem.get_word(0)
-        self.round_block.add_normal_poly_word(normal_word_zero, 0)
-        self.round_block.normal_sparse_diff = high_low_diff
-        self.round_block.mem_len = self.normal_mem.num_words
+        self.shift_register.add_word(normal_word_zero, 0)
 
-        # Process initial shifts before the main loop
-        self._process_initial_shifts(normal_word_zero, high_shift, low_shift,
-                                   acc_start_idx_high, acc_start_idx_low,
-                                   acc_shift_idx_high, acc_shift_idx_low,
-                                   )
+        self._process_initial_acc(normal_word_zero, acc_start_idx_high + 1, acc_shift_idx_high, high_shift)
+
+        self._process_initial_acc(normal_word_zero, acc_start_idx_low + 1, acc_shift_idx_low, low_shift)  
 
         # Process words
         self.low_latency = self.high_latency = 0
-        for word_idx in range(29):#self.normal_mem.num_words + high_low_diff - 1
-                
-            # Process normal words
-            self._process_normal_word(word_idx, acc_start_idx_high, acc_shift_idx_high,
-                                   acc_shift_idx_low, self.high_latency, self.low_latency)
+
+        for load_word_idx in range(1, self.normal_mem.num_words + self.high_low_diff):#self.normal_mem.num_words + self.high_low_diff
             
+            normal_word_high = self.normal_mem.get_word(load_word_idx % self.acc_mem.num_words)
+            acc_word = self.acc_mem.get_word((load_word_idx + acc_start_idx_high) % self.acc_mem.num_words)
+            
+            self.shift_register.add_word(normal_word_high, load_word_idx % self.acc_mem.num_words)
+            shift_register_size = self.shift_register.size()
+                        
+            high_left_idx, high_right_idx, low_left_idx, low_right_idx = self._get_index(load_word_idx, shift_register_size)        
+
+            high_right, high_left, low_right, low_left = self.shift_register.get_word_pair(
+                high_right_idx, high_left_idx, low_right_idx, low_left_idx)
+            
+            xor_result = self.xor_adder.process_xor(
+                high_left, high_right, low_left, low_right,
+                acc_word, (acc_shift_idx_high, acc_shift_idx_high + 31), (acc_shift_idx_low, acc_shift_idx_low + 31))
+            
+            self.acc_mem.set_word((load_word_idx + acc_start_idx_high) % self.acc_mem.num_words, xor_result)
+
             # Update latency
-            acc_shift_idx_high, acc_shift_idx_low = self._update_latency(acc_start_idx_high, word_idx,
+            acc_shift_idx_high, acc_shift_idx_low = self._update_latency(acc_start_idx_high, load_word_idx,
                                                            high_shift, low_shift,
                                                            acc_shift_idx_high, acc_shift_idx_low)
-            
 
-    def _process_normal_word(self, word_idx, acc_start_idx_high, acc_shift_idx_high,
-                           acc_shift_idx_low, high_latency, low_latency):
-        """Process a normal word in the multiplication"""
-        normal_word_high = self.normal_mem.get_word((word_idx + 1) % self.acc_mem.num_words)
-        
-        self.round_block.add_normal_poly_word(normal_word_high, (word_idx + 1) % self.acc_mem.num_words)
-        
-        acc_word = self.acc_mem.get_word((acc_start_idx_high + 1 + word_idx) % self.acc_mem.num_words)
-        self.round_block.set_acc_word(acc_word, (acc_start_idx_high + 1 + word_idx) % self.acc_mem.num_words)
-        
-        self.round_block.process_round(high_latency, low_latency)
+    def _get_index(self, load_word_idx, shift_register_size):
+        """Get the index of the word to load"""
 
-        result = self.xor_adder.process_xor(
-            self.round_block.normal_high_word_left,
-            self.round_block.normal_high_word_right,
-            self.round_block.normal_low_word_left,
-            self.round_block.normal_low_word_right,
-            self.round_block.acc_word,
-            (acc_shift_idx_high, acc_shift_idx_high + 31),
-            (acc_shift_idx_low, acc_shift_idx_low + 31)
-        )
-        
-        self.acc_mem.set_word((acc_start_idx_high + 1 + word_idx) % self.acc_mem.num_words, result)
+        high_left_idx = 0
+        high_right_idx = 0
+        low_left_idx = 0
+        low_right_idx = 0
 
-    def _update_latency(self, acc_start_idx_high, word_idx, high_shift, low_shift,
+        if load_word_idx >= self.normal_mem.num_words:
+            high_left_idx = None
+            high_right_idx = None
+        else:
+            high_left_idx = shift_register_size - 1 - self.high_latency
+            high_right_idx = shift_register_size - 2 - self.high_latency
+
+        if load_word_idx < self.high_low_diff + 1:
+            low_left_idx = None
+            low_right_idx = None
+        else:
+            low_left_idx = shift_register_size - self.high_low_diff - 1 - self.low_latency
+            low_right_idx = shift_register_size - self.high_low_diff - 2 - self.low_latency
+
+        if self.debug_mode:
+            print("\n=== Processing Round ===")
+            print(f"Using high words: [{high_left_idx}], [{high_right_idx}]")
+            print(f"Using low words: [{low_left_idx}], [{low_right_idx}]")
+
+        return high_left_idx, high_right_idx, low_left_idx, low_right_idx
+
+    def _update_latency(self, acc_start_idx_high, load_word_idx, high_shift, low_shift,
                        acc_shift_idx_high, acc_shift_idx_low):
         """Update latency values based on current state"""
         
-        if acc_start_idx_high + 1 + word_idx == (self.acc_mem.num_words - 1):
+        if acc_start_idx_high + load_word_idx == (self.acc_mem.num_words - 1):
             
             if high_shift % 32 >= 5:
                 self.high_latency = 1
@@ -175,14 +177,11 @@ class Controller:
     def execute(self, iter = None) -> None:
         """Execute the multiplication operation"""
 
-        self.round_block.clear_queue()
-        self.process_word(0)
-
-        # if iter is None:
-        #     for i in range(self.sparse_mem.num_words):
-        #         self.round_block.clear_queue()
-        #         self.process_word(i)
-        # else:
-        #     for i in range(iter):
-        #         self.round_block.clear_queue()
-        #         self.process_word(i)
+        if iter is None:
+            for i in range(self.sparse_mem.num_words):
+                self.shift_register.clear()
+                self.process_word(i)
+        else:
+            for i in range(iter):
+                self.shift_register.clear()
+                self.process_word(i)
