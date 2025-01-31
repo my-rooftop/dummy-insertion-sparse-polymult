@@ -738,9 +738,23 @@ module tb_polymult();
             #(CLK_PERIOD);
             
 
-            #(CLK_PERIOD);
+            #(CLK_PERIOD * 5);
 
+            // First handle the main loop up to 19 iterations before the end
+            for (i = 1; i < MEM_SIZE + high_low_diff + 1 - 19; i = i + 1) begin
+                wait(normal_mem_addr_o == i);
+                #(CLK_PERIOD);
+                acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+                normal_mem_data = normal_words[i % MEM_SIZE];
+            end
 
+                        // Then handle the last 19 iterations separately
+            for (i = MEM_SIZE + high_low_diff + 1 - 19; i < MEM_SIZE + high_low_diff + 1; i = i + 1) begin
+                wait(normal_mem_addr_o == i);
+                #(CLK_PERIOD);
+                acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
+                normal_mem_data = normal_words[i % MEM_SIZE];
+            end
 
             // Wait for process_done signal before moving to next iteration
             wait(process_done);
