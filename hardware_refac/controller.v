@@ -42,11 +42,13 @@ module controller #(
     localparam ROUND_LOAD_ZERO = 5'b01011;
     localparam ROUND_LOAD = 5'b01100;
     localparam ROUND_ADD = 5'b01101;
-    localparam ROUND_GET_INDEX = 5'b01110;
-    localparam ROUND_GET_PAIR = 5'b01111;
-    localparam ROUND_UPDATE_LATENCY = 5'b10000;
-    localparam ROUND_END = 5'b10001;
-    localparam ROUND_LOAD_WAIT = 5'b10010;
+    localparam ROUND_ADD_WAIT = 5'b01110;
+    localparam ROUND_ADD_WAIT_WAIT = 5'b10100;
+    localparam ROUND_GET_INDEX = 5'b01111;
+    localparam ROUND_GET_PAIR = 5'b10000;
+    localparam ROUND_UPDATE_LATENCY = 5'b10001;
+    localparam ROUND_END = 5'b10010;
+    localparam ROUND_LOAD_WAIT = 5'b10011;
 
     reg [4:0] state;
     reg [15:0] high_shift, low_shift;
@@ -304,28 +306,30 @@ module controller #(
                 ROUND_LOAD_ZERO: begin
                     shift_reg_word_valid <= 0;
                     if(word_accepted) begin
-                        state <= ROUND_LOAD;
+                        state <= ROUND_LOAD_WAIT;
                     end
                 end
 
-                ROUND_LOAD: begin
+                ROUND_LOAD_WAIT: begin
+                    acc_mem_write_en <= 0;
                     load_word_idx <= load_word_idx + 1;
+                    state <= ROUND_LOAD;
+                end
+
+                ROUND_LOAD: begin
                     if (load_word_idx == MEM_SIZE + normal_sparse_diff) begin
                         state <= ROUND_END;
                     end
                     else begin
                         normal_mem_addr_o <= load_word_idx % MEM_SIZE;
                         acc_mem_addr_o <= (load_word_idx + acc_start_idx_high) % MEM_SIZE;
-                        state <= ROUND_LOAD_WAIT;
+                        state <= ROUND_ADD;
                     end
                 end
 
-                ROUND_LOAD_WAIT: begin
-                    state <= ROUND_ADD;
-                end
 
                 ROUND_ADD: begin
-                    if (normal_mem_addr_i == load_word_idx % MEM_SIZE) begin
+                    if (normal_mem_addr_i == load_word_idx % MEM_SIZE) begin //딱 여기서 안넘어감
                         shift_reg_word_in <= normal_mem_data_i;
                         acc_mem <= acc_mem_data_i;
                         shift_reg_word_valid <= 1;
@@ -338,47 +342,57 @@ module controller #(
                         low_right_valid <= 0;
                         low_left_valid <= 0;
                         get_pair <= 0;
+                        state <= ROUND_ADD_WAIT_WAIT;
+                    end
+                end
+
+                ROUND_ADD_WAIT_WAIT: begin
+                    state <= ROUND_ADD_WAIT;
+                    shift_reg_word_valid <= 0; //busy 도입으로 대체 가능
+                end
+
+                ROUND_ADD_WAIT: begin
+                    if (word_accepted) begin
+                        current_size <= shift_reg_size;  // shift_register의 size를 current_size에 저장
                         state <= ROUND_GET_INDEX;
+                        shift_reg_word_in <= 0;
+                        shift_reg_word_valid <= 0;
                     end
                 end
 
                 ROUND_GET_INDEX: begin
-                    if (word_accepted) begin
-                        current_size <= shift_reg_size;  // shift_register의 size를 current_size에 저장
-                        shift_reg_word_in <= 0;
-                        shift_reg_word_valid <= 0;
-                        high_left_idx <= 0;
-                        high_right_idx <= 0;
-                        low_left_idx <= 0;
-                        low_right_idx <= 0;
-                        if(load_word_idx >= MEM_SIZE) begin
-                            high_left_valid <= 0;
-                            high_right_valid <= 0;
-                        end
-                        else begin
-                            high_left_valid <= 1;
-                            high_right_valid <= 1;
-                            high_left_idx <= current_size - 1 - high_latency;
-                            high_right_idx <= current_size - 2 - high_latency;
-                        end
-
-                        if (load_word_idx < normal_sparse_diff + 1) begin
-                            low_left_valid <= 0;
-                            low_right_valid <= 0;
-                        end
-                        else begin
-                            low_left_valid <= 1;
-                            low_right_valid <= 1;
-                            low_left_idx <= current_size - normal_sparse_diff - 1 - low_latency;
-                            low_right_idx <= current_size - normal_sparse_diff - 2 - low_latency;
-                        end
-                        get_pair <= 1;
-                        state <= ROUND_GET_PAIR;
+                    high_left_idx <= 0;
+                    high_right_idx <= 0;
+                    low_left_idx <= 0;
+                    low_right_idx <= 0;
+                    if(load_word_idx >= MEM_SIZE) begin
+                        high_left_valid <= 0;
+                        high_right_valid <= 0;
                     end
+                    else begin
+                        high_left_valid <= 1;
+                        high_right_valid <= 1;
+                        high_left_idx <= current_size - 1 - high_latency;
+                        high_right_idx <= current_size - 2 - high_latency;
+                    end
+
+                    if (load_word_idx < normal_sparse_diff + 1) begin
+                        low_left_valid <= 0;
+                        low_right_valid <= 0;
+                    end
+                    else begin
+                        low_left_valid <= 1;
+                        low_right_valid <= 1;
+                        low_left_idx <= current_size - normal_sparse_diff - 1 - low_latency;
+                        low_right_idx <= current_size - normal_sparse_diff - 2 - low_latency;
+                    end
+                    get_pair <= 1;
+                    state <= ROUND_GET_PAIR;
                 end
 
                 ROUND_GET_PAIR: begin
                     if (pair_valid) begin
+                        get_pair <= 0;
                         acc_mem_write_data_o <= xor_result;
                         acc_mem_write_en <= 1;
                         acc_mem_addr_o <= (load_word_idx + acc_start_idx_high) % MEM_SIZE;
@@ -386,7 +400,7 @@ module controller #(
                             state <= ROUND_UPDATE_LATENCY;
                         end
                         else begin
-                            state <= ROUND_LOAD;
+                            state <= ROUND_LOAD_WAIT;
                         end
                     end
                 end
@@ -409,6 +423,7 @@ module controller #(
                         low_latency <= 0;
                         acc_shift_idx_low <= 5 - low_shift % 32;
                     end
+                    state <= ROUND_LOAD_WAIT;   
                 end
 
                 ROUND_END: begin

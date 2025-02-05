@@ -11,8 +11,8 @@ module xor_adder #( //slice LUTs 247
    input wire [WORD_WIDTH-1:0] acc_poly,
     
    // Start positions
-   input wire [5:0] high_start,
-   input wire [5:0] low_start,
+   input wire [4:0] high_start,
+   input wire [4:0] low_start,
     
    // Output
    output wire [WORD_WIDTH-1:0] result
