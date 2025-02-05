@@ -10,11 +10,12 @@ module controller #(
     
     // Memory interfaces
     input wire [WORD_WIDTH-1:0] normal_mem_data_i,
+    input wire [9:0] normal_mem_addr_i,
     input wire [WORD_WIDTH-1:0] sparse_mem_data_i,
     input wire [WORD_WIDTH-1:0] acc_mem_data_i,
     input wire [9:0] sparse_mem_addr_i,
 
-    output reg [WORD_WIDTH-1:0] acc_mem_write_data,
+    output reg [WORD_WIDTH-1:0] acc_mem_write_data_o,
     output reg acc_mem_write_en,
     output reg [9:0] normal_mem_addr_o,
     output reg [9:0] acc_mem_addr_o,
@@ -45,6 +46,7 @@ module controller #(
     localparam ROUND_GET_PAIR = 5'b01111;
     localparam ROUND_UPDATE_LATENCY = 5'b10000;
     localparam ROUND_END = 5'b10001;
+    localparam ROUND_LOAD_WAIT = 5'b10010;
 
     reg [4:0] state;
     reg [15:0] high_shift, low_shift;
@@ -71,7 +73,11 @@ module controller #(
     wire [WORD_WIDTH-1:0] low_left_word;
     wire pair_valid;
     wire word_accepted;
-    reg [4:0] current_size;
+    
+    // shift_register 인스턴스화 부분의 wire/reg 선언 수정
+    wire [4:0] shift_reg_size;  // current_size를 shift_reg_size로 이름 변경
+    reg [4:0] current_size;     // current_size는 reg로 선언
+
     wire shift_reg_ready;
 
     reg [9:0] load_word_idx;
@@ -101,7 +107,7 @@ module controller #(
         .processing_done(initial_processing_done)
     );
 
-    // Instantiate shift_register
+    // shift_register 인스턴스 수정
     shift_register #(
         .WORD_WIDTH(WORD_WIDTH),
         .MAX_SIZE(19)
@@ -126,7 +132,7 @@ module controller #(
         .low_left_word(low_left_word),
         .pair_valid(pair_valid),
         .word_accepted(word_accepted),
-        .current_size(current_size),
+        .current_size(shift_reg_size),  // 이름 변경
         .ready(shift_reg_ready)
     );
 
@@ -201,7 +207,7 @@ module controller #(
                     if (start_process) begin
                         state <= READ_SPARSE;
                         busy <= 1'b1;
-                        
+                        shift_reg_clear <= 0;
                     end
                 end
 
@@ -296,9 +302,10 @@ module controller #(
                 end
 
                 ROUND_LOAD_ZERO: begin
+                    shift_reg_word_valid <= 0;
                     if(word_accepted) begin
                         state <= ROUND_LOAD;
-                    End
+                    end
                 end
 
                 ROUND_LOAD: begin
@@ -309,28 +316,35 @@ module controller #(
                     else begin
                         normal_mem_addr_o <= load_word_idx % MEM_SIZE;
                         acc_mem_addr_o <= (load_word_idx + acc_start_idx_high) % MEM_SIZE;
-                        state <= ROUND_ADD;
+                        state <= ROUND_LOAD_WAIT;
                     end
                 end
 
+                ROUND_LOAD_WAIT: begin
+                    state <= ROUND_ADD;
+                end
+
                 ROUND_ADD: begin
-                    shift_reg_word_in <= normal_mem_data_i
-                    acc_mem <= acc_mem_data_i;
-                    shift_reg_word_valid <= 1;
-                    high_right_idx <= 0;
-                    high_left_idx <= 0;
-                    low_right_idx <= 0;
-                    low_left_idx <= 0;
-                    high_right_valid <= 0;
-                    high_left_valid <= 0;
-                    low_right_valid <= 0;
-                    low_left_valid <= 0;
-                    get_pair <= 0;
-                    state <= ROUND_GET_INDEX;
+                    if (normal_mem_addr_i == load_word_idx % MEM_SIZE) begin
+                        shift_reg_word_in <= normal_mem_data_i;
+                        acc_mem <= acc_mem_data_i;
+                        shift_reg_word_valid <= 1;
+                        high_right_idx <= 0;
+                        high_left_idx <= 0;
+                        low_right_idx <= 0;
+                        low_left_idx <= 0;
+                        high_right_valid <= 0;
+                        high_left_valid <= 0;
+                        low_right_valid <= 0;
+                        low_left_valid <= 0;
+                        get_pair <= 0;
+                        state <= ROUND_GET_INDEX;
+                    end
                 end
 
                 ROUND_GET_INDEX: begin
                     if (word_accepted) begin
+                        current_size <= shift_reg_size;  // shift_register의 size를 current_size에 저장
                         shift_reg_word_in <= 0;
                         shift_reg_word_valid <= 0;
                         high_left_idx <= 0;
@@ -348,7 +362,7 @@ module controller #(
                             high_right_idx <= current_size - 2 - high_latency;
                         end
 
-                        if load_word_idx < normal_sparse_diff + 1 begin
+                        if (load_word_idx < normal_sparse_diff + 1) begin
                             low_left_valid <= 0;
                             low_right_valid <= 0;
                         end
@@ -365,7 +379,7 @@ module controller #(
 
                 ROUND_GET_PAIR: begin
                     if (pair_valid) begin
-                        acc_mem_write_data <= xor_result;
+                        acc_mem_write_data_o <= xor_result;
                         acc_mem_write_en <= 1;
                         acc_mem_addr_o <= (load_word_idx + acc_start_idx_high) % MEM_SIZE;
                         if (acc_start_idx_high + load_word_idx == MEM_SIZE - 1) begin
