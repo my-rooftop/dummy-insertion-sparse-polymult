@@ -745,7 +745,7 @@ module tb_polymult();
             // First handle the main loop up to 19 iterations before the end
             for (i = 1; i < MEM_SIZE + high_low_diff - 19; i = i + 1) begin
                 #(CLK_PERIOD);
-                wait(normal_mem_addr_o == i);
+                wait(normal_mem_addr_o == i % MEM_SIZE);
                 #(CLK_PERIOD);
                 normal_mem_data_i = normal_words[i % MEM_SIZE];
                 normal_mem_addr_i = i % MEM_SIZE;
@@ -756,11 +756,16 @@ module tb_polymult();
             end
 
                         // Then handle the last 19 iterations separately
-            for (i = MEM_SIZE + high_low_diff - 19; i < MEM_SIZE + high_low_diff + 1; i = i + 1) begin
-                wait(normal_mem_addr_o == i);
+            for (i = MEM_SIZE + high_low_diff - 19; i < MEM_SIZE + high_low_diff; i = i + 1) begin
                 #(CLK_PERIOD);
-                acc_mem_data_i = acc_words[(acc_mem_addr_o) % (MEM_SIZE)];
+                wait(normal_mem_addr_o == i % MEM_SIZE);
+                #(CLK_PERIOD);
                 normal_mem_data_i = normal_words[i % MEM_SIZE];
+                normal_mem_addr_i = i % MEM_SIZE;
+                acc_mem_data_i = acc_words[(acc_mem_addr_o) % (MEM_SIZE)];
+                #(CLK_PERIOD);
+                #(CLK_PERIOD);
+                #(CLK_PERIOD * 10);
             end
 
             // Wait for process_done signal before moving to next iteration

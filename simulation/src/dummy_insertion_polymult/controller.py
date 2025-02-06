@@ -99,7 +99,7 @@ class Controller:
         # Process words
         self.low_latency = self.high_latency = 0
 
-        for load_word_idx in range(1, 8):#self.normal_mem.num_words + self.high_low_diff
+        for load_word_idx in range(1, self.normal_mem.num_words + self.high_low_diff):#self.normal_mem.num_words + self.high_low_diff
             
             normal_word_high = self.normal_mem.get_word(load_word_idx % self.acc_mem.num_words)
             acc_word = self.acc_mem.get_word((load_word_idx + acc_start_idx_high) % self.acc_mem.num_words)
@@ -177,14 +177,12 @@ class Controller:
     def execute(self, iter = None) -> None:
         """Execute the multiplication operation"""
 
-        self.shift_register.clear()
-        self.process_word(0)
 
-        # if iter is None:
-        #     for i in range(self.sparse_mem.num_words):
-        #         self.shift_register.clear()
-        #         self.process_word(i)
-        # else:
-        #     for i in range(iter):
-        #         self.shift_register.clear()
-        #         self.process_word(i)
+        if iter is None:
+            for i in range(self.sparse_mem.num_words):
+                self.shift_register.clear()
+                self.process_word(i)
+        else:
+            for i in range(iter):
+                self.shift_register.clear()
+                self.process_word(i)

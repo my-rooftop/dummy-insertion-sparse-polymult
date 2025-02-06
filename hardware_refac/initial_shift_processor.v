@@ -14,7 +14,7 @@ module initial_shift_processor #(
     
     // Control signals
     input wire [15:0] shift,
-    input wire [4:0] acc_shift_idx,
+    input wire [5:0] acc_shift_idx,
     input wire start_process,
     
     // Output interface
@@ -35,7 +35,7 @@ module initial_shift_processor #(
         input [WORD_WIDTH-1:0] word_zero,
         input [WORD_WIDTH-1:0] word_551,
         input [WORD_WIDTH-1:0] word_552,
-        input [4:0] shift_idx,
+        input [5:0] shift_idx,
         input [15:0] shift
     );
         reg [WORD_WIDTH-1:0] high_bits_local;

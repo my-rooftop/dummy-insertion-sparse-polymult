@@ -53,7 +53,7 @@ module controller #(
     reg [4:0] state;
     reg [15:0] high_shift, low_shift;
     reg [9:0] acc_start_idx_high, acc_start_idx_low;
-    reg [4:0] acc_shift_idx_high, acc_shift_idx_low;
+    reg [5:0] acc_shift_idx_high, acc_shift_idx_low;
     reg [5:0] normal_sparse_diff;
 
     reg [WORD_WIDTH-1:0] normal_word_zero, normal_word_551, normal_word_552;
@@ -87,7 +87,7 @@ module controller #(
 
     reg [WORD_WIDTH-1:0] initial_acc_word_i;
     reg [15:0] initial_shift;
-    reg [4:0] initial_acc_shift_idx;
+    reg [5:0] initial_acc_shift_idx;
     reg initial_start_process;
     wire [WORD_WIDTH-1:0] initial_result;
     wire initial_processing_done;
