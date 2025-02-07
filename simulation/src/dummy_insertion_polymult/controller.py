@@ -177,7 +177,6 @@ class Controller:
     def execute(self, iter = None) -> None:
         """Execute the multiplication operation"""
 
-
         if iter is None:
             for i in range(self.sparse_mem.num_words):
                 self.shift_register.clear()
