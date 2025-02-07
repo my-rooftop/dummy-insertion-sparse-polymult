@@ -17,9 +17,10 @@ module tb_polymult();
     // Signals
     reg clk;
     reg rst_n;
-    reg [WORD_WIDTH-1:0] normal_mem_data;
-    reg [WORD_WIDTH-1:0] sparse_mem_data;
-    reg [WORD_WIDTH-1:0] acc_mem_data;
+    reg [WORD_WIDTH-1:0] normal_mem_data_i;
+    reg [9:0] normal_mem_addr_i;
+    reg [WORD_WIDTH-1:0] sparse_mem_data_i;
+    reg [WORD_WIDTH-1:0] acc_mem_data_i;
     reg [9:0] sparse_mem_addr_i;
     reg start_process;
 
@@ -28,10 +29,9 @@ module tb_polymult();
     reg [4:0] high_low_diff;
 
 
-    wire [WORD_WIDTH-1:0] acc_mem_write_data;
+    wire [WORD_WIDTH-1:0] acc_mem_write_data_o;
     wire acc_mem_write_en;
     wire [9:0] normal_mem_addr_o;
-    wire [9:0] sparse_mem_addr_o;
     wire [9:0] acc_mem_addr_o;
     wire process_done;
     wire busy;
@@ -61,14 +61,14 @@ module tb_polymult();
     ) dut (
         .clk(clk),
         .rst_n(rst_n),
-        .normal_mem_data(normal_mem_data),
-        .sparse_mem_data(sparse_mem_data),
-        .acc_mem_data(acc_mem_data),
+        .normal_mem_data_i(normal_mem_data_i),
+        .normal_mem_addr_i(normal_mem_addr_i),
+        .sparse_mem_data_i(sparse_mem_data_i),
+        .acc_mem_data_i(acc_mem_data_i),
         .sparse_mem_addr_i(sparse_mem_addr_i),
-        .acc_mem_write_data(acc_mem_write_data),
+        .acc_mem_write_data_o(acc_mem_write_data_o),
         .acc_mem_write_en(acc_mem_write_en),
         .normal_mem_addr_o(normal_mem_addr_o),
-        .sparse_mem_addr_o(sparse_mem_addr_o),
         .acc_mem_addr_o(acc_mem_addr_o),
         .start_process(start_process),
         .process_done(process_done),
@@ -701,59 +701,76 @@ module tb_polymult();
         for(pair_idx = 0; pair_idx < MEM_SPARSE_SIZE; pair_idx = pair_idx + 1) begin
 
             sparse_mem_addr_i = pair_idx;
-            sparse_mem_data = sparse_pairs[pair_idx];
+            sparse_mem_data_i = sparse_pairs[pair_idx];
             start_process = 1;
             #(CLK_PERIOD);
 
             // Provide normal memory data when requested
             wait(normal_mem_addr_o == 0);
             #(CLK_PERIOD);
-            normal_mem_data = normal_words[0];
+            normal_mem_data_i = normal_words[0];
+            
 
             wait(normal_mem_addr_o == 551);
             #(CLK_PERIOD);
-            normal_mem_data = normal_words[551];
+            normal_mem_data_i = normal_words[551];
+                    
 
             wait(normal_mem_addr_o == 552);
             #(CLK_PERIOD);
-            normal_mem_data = normal_words[552];
+            normal_mem_data_i = normal_words[552];
+            
+            
 
-            acc_start_idx_high = sparse_mem_data[31:16] >> 5;  // 상위 16비트를 선택하고 32로 나눔
-            acc_start_idx_low = sparse_mem_data[15:0] >> 5;    // 하위 16비트를 선택하고 32로 나눔
+            acc_start_idx_high = sparse_mem_data_i[31:16] >> 5;  // 상위 16비트를 선택하고 32로 나눔
+            acc_start_idx_low = sparse_mem_data_i[15:0] >> 5;    // 하위 16비트를 선택하고 32로 나눔
 
             high_low_diff = acc_start_idx_low - acc_start_idx_high;
 
             // Provide accumulator memory data based on acc_mem_addr_o
             wait(acc_mem_addr_o == acc_start_idx_high); // Wait for high shift address
+            acc_mem_data_i = acc_words[acc_mem_addr_o]; // Initial acc data is 0
+            
             #(CLK_PERIOD);
-            acc_mem_data = acc_words[acc_mem_addr_o]; // Initial acc data is 0
+            
             
             wait(acc_mem_addr_o == acc_start_idx_low); // Wait for low shift address
+            acc_mem_data_i = acc_words[acc_mem_addr_o]; // Initial acc data is 0
+            
             #(CLK_PERIOD);
-            acc_mem_data = acc_words[acc_mem_addr_o]; // Initial acc data is 0
+            
 
-            #(CLK_PERIOD);
+            #(CLK_PERIOD * 10);
 
             // First handle the main loop up to 19 iterations before the end
-            for (i = 1; i < MEM_SIZE + high_low_diff + 1 - 19; i = i + 1) begin
-                wait(normal_mem_addr_o == i);
+            for (i = 1; i < MEM_SIZE + high_low_diff - 19; i = i + 1) begin
                 #(CLK_PERIOD);
-                acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-                normal_mem_data = normal_words[i % MEM_SIZE];
+                wait(normal_mem_addr_o == i % MEM_SIZE);
+                #(CLK_PERIOD);
+                normal_mem_data_i = normal_words[i % MEM_SIZE];
+                normal_mem_addr_i = i % MEM_SIZE;
+                acc_mem_data_i = acc_words[(acc_mem_addr_o) % (MEM_SIZE)];
+                #(CLK_PERIOD);
+                #(CLK_PERIOD);
+                #(CLK_PERIOD * 10);
             end
 
-            // Then handle the last 19 iterations separately
-            for (i = MEM_SIZE + high_low_diff + 1 - 19; i < MEM_SIZE + high_low_diff + 1; i = i + 1) begin
-                wait(normal_mem_addr_o == i);
+                        // Then handle the last 19 iterations separately
+            for (i = MEM_SIZE + high_low_diff - 19; i < MEM_SIZE + high_low_diff; i = i + 1) begin
                 #(CLK_PERIOD);
-                acc_mem_data = acc_words[(acc_mem_addr_o + 1) % (MEM_SIZE - 1)];
-                normal_mem_data = normal_words[i % MEM_SIZE];
+                wait(normal_mem_addr_o == i % MEM_SIZE);
+                #(CLK_PERIOD);
+                normal_mem_data_i = normal_words[i % MEM_SIZE];
+                normal_mem_addr_i = i % MEM_SIZE;
+                acc_mem_data_i = acc_words[(acc_mem_addr_o) % (MEM_SIZE)];
+                #(CLK_PERIOD);
+                #(CLK_PERIOD);
+                #(CLK_PERIOD * 10);
             end
-
 
             // Wait for process_done signal before moving to next iteration
             wait(process_done);
-            
+            #(CLK_PERIOD * 2);
             rst_n = 0;
             start_process = 0;
             #(CLK_PERIOD * 2);
@@ -778,7 +795,7 @@ module tb_polymult();
     // Monitor acc_mem_write_en to update acc_words
     always @(posedge clk) begin
         if (acc_mem_write_en) begin
-            acc_words[acc_mem_addr_o] <= acc_mem_write_data;
+            acc_words[acc_mem_addr_o] <= acc_mem_write_data_o;
         end
     end
 
