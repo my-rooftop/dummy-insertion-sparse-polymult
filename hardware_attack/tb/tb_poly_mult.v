@@ -36,7 +36,7 @@ module poly_mult_hqc_v1_tb
 	
 	
 	//128
-    parameter RAMWIDTH = 64, // Width of each chunk W needs to be divided in to. Best to choose a 2 power
+    parameter RAMWIDTH = 32, // Width of each chunk W needs to be divided in to. Best to choose a 2 power
     parameter TWO_N = 2*N,
     parameter W_RAMWIDTH = TWO_N + (RAMWIDTH-TWO_N%RAMWIDTH)%RAMWIDTH, 
 //    parameter W_RAMWIDTH = N + (RAMWIDTH-N%RAMWIDTH)%RAMWIDTH, 
@@ -203,7 +203,7 @@ always
     
 
 //parameter random_file = (parameter_set == "hqc128")? "random_vector_128.mem":
-parameter random_file = (parameter_set == "hqc128")? "h_for_y_64.mem":
+parameter random_file = (parameter_set == "hqc128")? "h_for_y_32.mem":
 				        (parameter_set == "hqc192")? "h_192.in":
 			            (parameter_set == "hqc256")? "random_vector_256.mem": 
                                                      "smal_para_test.mem";

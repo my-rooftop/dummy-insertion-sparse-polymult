@@ -39,10 +39,10 @@ def save_to_mem(words: List[str], mem_filename: str) -> None:
             f.write(word + "\n")
 
 def main():
-    csv_filename = "./hardware_attack/random_generator_py/h_for_y_bits.csv"
-    mem_filename = "./hardware_attack/random_generator_py/h_for_y_64.mem"  # 64비트 사용 시 변경
-
-    word_size = 64  # 여기서 64 또는 128로 설정 가능
+    word_size = 32  # 여기서 64 또는 128로 설정 가능
+    
+    csv_filename = "./hardware_attack/random_generator_py/s_bits.csv"
+    mem_filename = f"./hardware_attack/random_generator_py/s_{word_size}.mem"  # 64비트 사용 시 변경
 
     # CSV에서 계수가 1인 비트 위치 읽기
     bit_positions = read_s_bits(csv_filename)
