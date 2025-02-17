@@ -5,3 +5,4 @@
 .vscode/
 *.pyc
 vivado_polymult/
+vivado_polymult_*/
