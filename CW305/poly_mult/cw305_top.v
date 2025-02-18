@@ -246,13 +246,11 @@ module cw305_top #(
    assign crypt_busy = aes_busy;
 
    // Example AES Core
-   aes_core aes_core (
+    poly_mult poly_mult (
        .clk             (aes_clk),
        .load_i          (aes_load),
        .key_i           ({aes_key, 128'h0}),
        .data_i          (aes_pt),
-       .size_i          (2'd0), //AES128
-       .dec_i           (1'b0),//enc mode
        .data_o          (aes_ct),
        .busy_o          (aes_busy)
    );

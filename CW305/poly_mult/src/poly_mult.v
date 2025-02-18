@@ -35,9 +35,9 @@ module poly_mult #(
     );
 
 
-    wire wr_en;
-    wire [LOGW-1:0] loc_in;
-    wire [LOG_WEIGHT-1:0] loc_addr;
+    reg wr_en;
+    reg [LOGW-1:0] loc_in;
+    reg [LOG_WEIGHT-1:0] loc_addr;
     wire [LOGW-1:0] loc_out;
 
     mem_single #(.WIDTH(LOGW), .DEPTH(WEIGHT)) POSITION_RAM
@@ -57,10 +57,11 @@ module poly_mult #(
             loc_addr <= key_i[LOG_WEIGHT-1:0]; // Extract address bits
             loc_in <= data_i[LOGW-1:0]; // Store data
             wr_en <= 1;
+            data_o <= 16'b0000000011111111;
             busy_o <= 1;
         end else begin
             wr_en <= 0;
-            data_o <= loc_out;
+            data_o <= 16'b1111111100000000;
             busy_o <= 0;
         end
     end
