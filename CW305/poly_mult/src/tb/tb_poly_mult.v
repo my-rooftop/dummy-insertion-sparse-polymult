@@ -2,70 +2,64 @@
 
 module poly_mult_tb;
 
-    // Parameters
-    parameter LOGW = 8; // LOGW 값은 실제 크기에 맞게 설정 필요
-    parameter LOG_WEIGHT = 7; // LOG_WEIGHT 값은 실제 크기에 맞게 설정 필요
+  // 신호 선언
+  reg         clk;
+  reg         load_i;
+  reg [127:0] key_i;
+  reg [127:0] data_i;
+  wire [127:0] data_o;
+  wire        busy_o;
 
-    // Testbench Signals
-    reg clk;
-    reg load_i;
-    reg [127:0] key_i;
-    reg [127:0] data_i;
-    wire [127:0] data_o;
-    wire busy_o;
+  // DUT 인스턴스화
+  poly_mult uut (
+    .clk(clk),
+    .load_i(load_i),
+    .key_i(key_i),
+    .data_i(data_i),
+    .data_o(data_o),
+    .busy_o(busy_o)
+  );
 
-    // Instantiate the DUT (Device Under Test)
-    poly_mult uut (
-        .clk(clk),
-        .load_i(load_i),
-        .key_i(key_i),
-        .data_i(data_i),
-        .data_o(data_o),
-        .busy_o(busy_o)
-    );
+  // 클럭 생성 (주기 10 ns)
+  always #5 clk = ~clk;
 
-    // Clock Generation
-    always #5 clk = ~clk; // 10ns 주기의 클럭 생성 (100MHz)
+  initial begin
+    // 초기화
+    clk     = 0;
+    load_i  = 0;
+    key_i   = 128'hDEADBEEF_12345678_DEADBEEF_12345678;  // 임의의 key 값
+    data_i  = 128'h8888_7777_6666_5555_4444_3333_2222_1111; // 16비트 단위로 나눈 128비트 데이터
+    
+    // 초기 대기
+    #20;
+    
+    // load_i를 한 번만 펄스하여 알고리즘 시작
+    $display("Time %0t: Assert load_i", $time);
+    load_i = 1;
+    @(posedge clk);
+    @(posedge clk);
+    load_i = 0;
 
-    initial begin
-        // 초기화
-        clk = 0;
-        load_i = 0;
-        key_i = 0;
-        data_i = 0;
-        
-        // 파워온 리셋 대기
-        #20;
+    // 알고리즘 실행 동안 busy_o가 1로 유지됨을 확인
+    wait (busy_o == 1);
+    $display("Time %0t: busy_o is HIGH, algorithm started.", $time);
 
-        // 첫 번째 데이터 로드
-        load_i = 1;
-        key_i = 128'h00000000000000000000000000000001; // 주소 1
-        data_i = 128'hDEADBEEFCAFEBABE1122334455667788; // 저장할 데이터
-        #10;
-        load_i = 0;
-        #20;
+    // busy_o가 0이 될 때까지 대기
+    wait (busy_o == 0);
+    #10;
 
-        // 두 번째 데이터 로드
-        load_i = 1;
-        key_i = 128'h00000000000000000000000000000002; // 주소 2
-        data_i = 128'hAABBCCDDEEFF00112233445566778899; // 저장할 데이터
-        #10;
-        load_i = 0;
-        #20;
+    // 최종 data_o 확인
+    $display("Time %0t: busy_o is LOW, algorithm finished.", $time);
+    $display("Time %0t: data_o = %h", $time, data_o);
 
-        // 데이터 읽기 테스트 (주소 1에서 읽기)
-        key_i = 128'h00000000000000000000000000000001; // 주소 1을 설정
-        #10;
-        $display("Read Data at Address 1: %h", data_o);
-        
-        // 데이터 읽기 테스트 (주소 2에서 읽기)
-        key_i = 128'h00000000000000000000000000000002; // 주소 2를 설정
-        #10;
-        $display("Read Data at Address 2: %h", data_o);
-
-        // 시뮬레이션 종료
-        #50;
-        $finish;
-    end
+    // 결과 비교
+    if (data_o === data_i)
+      $display("TEST PASSED: data_o matches data_i");
+    else
+      $display("TEST FAILED: data_o does not match data_i");
+      
+    #20;
+    $finish;
+  end
 
 endmodule
