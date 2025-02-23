@@ -229,21 +229,34 @@ module cw305_top #(
 
 
 `ifdef GOOGLE_VAULT_AES
-   wire aes_clk;
-   wire [127:0] aes_key;
-   wire [127:0] aes_pt;
-   wire [127:0] aes_ct;
-   wire aes_load;
-   wire aes_busy;
+    wire aes_clk;
+    wire [127:0] aes_key;
+    wire [127:0] aes_pt;
+    wire [127:0] aes_ct;
+    wire aes_load;
+    wire aes_busy;
 
-   assign aes_clk = crypt_clk;
-   assign aes_key = crypt_key;
-   assign aes_pt = crypt_textout;
-   assign crypt_cipherin = aes_ct;
-   assign aes_load = crypt_start;
-   assign crypt_ready = 1'b1;
-   assign crypt_done = ~aes_busy;
-   assign crypt_busy = aes_busy;
+    assign aes_clk = crypt_clk;
+    assign aes_key = crypt_key;
+    assign aes_pt = crypt_textout;
+    assign crypt_cipherin = aes_ct;
+    assign aes_load = crypt_start;
+    assign crypt_ready = 1'b1;
+    assign crypt_done = ~aes_busy;
+    assign crypt_busy = aes_busy;
+
+
+    `ifdef ILA_REG_POLY
+        ila_2 U_reg_poly (
+            .clk (aes_clk),
+            .probe0 (aes_load),
+            .probe1 (aes_key),
+            .probe2 (aes_pt),
+            .probe3 (aes_ct),
+            .probe4 (aes_busy)
+        );
+    `endif
+
 
    // Example AES Core
     poly_mult poly_mult (

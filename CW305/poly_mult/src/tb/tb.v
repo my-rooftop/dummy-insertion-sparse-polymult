@@ -28,7 +28,7 @@ either expressed or implied, of NewAE Technology Inc.
 `timescale 1ns / 1ns
 `default_nettype none 
 
-`include "/home/boochoo/hqc/dummy-insertion-sparse-polymult/CW305/poly_mult/cw305_aes_defines.v"
+`include "/home/boochoo/hqc/dummy-insertion-sparse-polymult/CW305/aes/cw305_aes_defines.v"
 
 module tb();
     parameter pADDR_WIDTH = 21;
