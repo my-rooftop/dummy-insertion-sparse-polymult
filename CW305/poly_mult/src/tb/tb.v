@@ -191,7 +191,7 @@ module tb();
       #(pUSB_CLOCK_PERIOD*10);
 
       write_bytes(0, 16, `REG_CRYPT_TEXTIN, {32'h12345678, 32'habcdef01, 32'h87654321, 32'hdeadbeef});
-      write_bytes(0, 16, `REG_CRYPT_KEY, {32'h0, 32'h0, 32'h0, 32'h40});
+      write_bytes(0, 16, `REG_CRYPT_KEY, {32'h4F000000, 32'h0, 32'h0, 32'h40});
 
       $display("Encrypting via register...");
       write_byte(0, `REG_CRYPT_GO, 0, 1);
