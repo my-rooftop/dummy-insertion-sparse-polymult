@@ -262,7 +262,7 @@ module cw305_top #(
     poly_mult poly_mult (
        .clk             (aes_clk),
        .load_i          (aes_load),
-       .key_i           ({aes_key, 128'h0}),
+       .key_i           (aes_key),
        .data_i          (aes_pt),
        .data_o          (aes_ct),
        .busy_o          (aes_busy)
