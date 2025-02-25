@@ -34,9 +34,10 @@ module poly_mult_top #(
 );
 
     // 내부 신호 정의
-    reg [LOGW-1:0] loc_in;
-    reg [LOG_WEIGHT-1:0] loc_addr;
-    wire [LOGW-1:0] loc_out; // ✅ POSITION_RAM에서 읽은 데이터
+    wire [LOGW-1:0] loc_in;
+    reg [LOGW-1:0] data_write;
+    reg [LOG_WEIGHT-1:0] loc_addr_write;
+    reg [LOG_WEIGHT-1:0] loc_addr_read;
 
     reg [W_BY_X-1:0] din;
     reg [ADDR_WIDTH-1:0] addr_0_reg;
@@ -45,13 +46,16 @@ module poly_mult_top #(
     reg wr_en_pos;
     reg wr_en_dual;
 
-    // ✅ POSITION_RAM (16비트 저장 및 읽기)
-    mem_single #(.WIDTH(LOGW), .DEPTH(WEIGHT)) POSITION_RAM (
+    mem_dual #(.WIDTH(LOGW), .DEPTH(WEIGHT)) POSITION_RAM (
         .clock(clk),
-        .data(loc_in),
-        .address(loc_addr),
-        .wr_en(wr_en_pos),
-        .q(loc_out)  // ✅ 읽기 데이터
+        .data_0(data_write),
+        .data_1(0),
+        .address_0(loc_addr_write),
+        .address_1(loc_addr_read),
+        .wren_0(wr_en_pos),
+        .wren_1(0),
+        .q_0(), 
+        .q_1(loc_in) // ✅ 읽기 데이터
     );
 
     // ✅ RANDOM_BITS_MEM (32비트 저장 및 읽기)
@@ -75,8 +79,8 @@ module poly_mult_top #(
                 if (key_i < WEIGHT) begin  // ✅ key_i < 66 → POSITION_RAM에 16비트 저장
                     wr_en_pos <= 1;
                     wr_en_dual <= 0;
-                    loc_addr <= key_i;
-                    loc_in   <= data_i[15:0];  // ✅ 16비트 저장
+                    loc_addr_write <= key_i;
+                    data_write   <= data_i[15:0];  // ✅ 16비트 저장
                     data_o <= data_i;  // ✅ 즉시 data_o 업데이트
                 end
                 else if (key_i >= WEIGHT && key_i < (WEIGHT + 553)) begin  // ✅ key_i 66~(66+553) → RANDOM_BITS_MEM에 32비트 저장
@@ -96,8 +100,8 @@ module poly_mult_top #(
                 wr_en_dual <= 0;
 
                 if (key_i < WEIGHT) begin
-                    loc_addr <= key_i; // ✅ POSITION_RAM에서 데이터 읽기
-                    data_o <= { 112'b0, loc_out};  // ✅ 데이터는 상위 16비트에 배치, 나머지는 0
+                    loc_addr_read <= key_i; // ✅ POSITION_RAM에서 데이터 읽기
+                    data_o <= { 112'b0, loc_in};  // ✅ 데이터는 상위 16비트에 배치, 나머지는 0
                 end
                 else if (key_i >= WEIGHT && key_i < (WEIGHT + 553)) begin
                     addr_0_reg <= key_i - WEIGHT; // ✅ RANDOM_BITS_MEM에서 데이터 읽기
