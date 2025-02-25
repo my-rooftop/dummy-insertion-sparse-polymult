@@ -257,7 +257,7 @@ module cw305_top #(
 
 
    // Example AES Core
-    poly_mult poly_mult (
+    poly_mult_top poly_top (
        .clk             (aes_clk),
        .load_i          (aes_load),
        .key_i           (aes_key),
