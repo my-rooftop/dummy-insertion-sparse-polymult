@@ -251,9 +251,7 @@ module cw305_top #(
             .clk (aes_clk),
             .probe0 (aes_load),
             .probe1 (aes_key),
-            .probe2 (aes_pt),
-            .probe3 (aes_ct),
-            .probe4 (aes_busy)
+            .probe2 (aes_pt)
         );
     `endif
 

@@ -27,121 +27,91 @@ module poly_mult #(
 )(
     input wire clk,
     input wire load_i,
-    input wire [127:0] key_i,   // 위치 제공
-    input wire [127:0] data_i,  // 저장할 데이터
+    input wire [9:0] key_i,   // ✅ 메모리 주소 (0 ~ 66+553)
+    input wire [127:0] data_i,  // ✅ 저장할 데이터
     output reg [127:0] data_o,
     output reg busy_o
 );
 
-    // 내부 상태 및 신호
-    reg wr_en;
+    // 내부 신호 정의
     reg [LOGW-1:0] loc_in;
     reg [LOG_WEIGHT-1:0] loc_addr;
-    wire [LOGW-1:0] loc_out;
-    reg [3:0] write_counter; 
-
-    reg [9:0] start_addr;  // ✅ 10비트 start_addr (최대 553)
-    reg [3:0] dual_write_counter; // ✅ 32비트 저장 시 카운터 (0~3)
+    wire [LOGW-1:0] loc_out; // ✅ POSITION_RAM에서 읽은 데이터
 
     reg [W_BY_X-1:0] din;
-    reg [ADDR_WIDTH-1:0]addr_0_reg;
-    reg [ADDR_WIDTH-1:0]addr_1_reg;
-    wire [W_BY_X-1:0] mux_word_0;
-    wire [W_BY_X-1:0] mux_word_1;
-    wire [W_BY_X-1:0] dout_0;
-    wire [W_BY_X-1:0] dout_1;
+    reg [ADDR_WIDTH-1:0] addr_0_reg;
+    wire [W_BY_X-1:0] dout_0; // ✅ RANDOM_BITS_MEM에서 읽은 데이터
 
-    // 메모리 블록 인스턴스 (POSITION_RAM)
+    reg wr_en_pos;
+    reg wr_en_dual;
+
+    // ✅ POSITION_RAM (16비트 저장 및 읽기)
     mem_single #(.WIDTH(LOGW), .DEPTH(WEIGHT)) POSITION_RAM (
         .clock(clk),
         .data(loc_in),
         .address(loc_addr),
-        .wr_en(wr_en),
-        .q(loc_out)
+        .wr_en(wr_en_pos),
+        .q(loc_out)  // ✅ 읽기 데이터
     );
 
+    // ✅ RANDOM_BITS_MEM (32비트 저장 및 읽기)
     mem_dual #(.WIDTH(W_BY_X), .DEPTH(Y)) RANDOM_BITS_MEM (
         .clock(clk),
         .data_0(din),
         .data_1(0),
         .address_0(addr_0_reg),
-        .address_1(addr_1_reg),
-        .wren_0(wr_en),
+        .address_1(0),
+        .wren_0(wr_en_dual),
         .wren_1(0),
-        .q_0(dout_0),
-        .q_1(dout_1)
+        .q_0(dout_0), // ✅ 읽기 데이터
+        .q_1()
     );
 
     always @(posedge clk) begin
-        case (key_i[127:126])
-            2'b00: begin  // ✅ key_i[127] == 0: POSITION_RAM에 16비트 저장
-                if (load_i) begin
-                    busy_o <= 1;  
-                    write_counter <= 0; 
-                    start_addr <= key_i[9:0];  // ✅ 10비트 주소 사용
-                end
-                else if (busy_o) begin
-                    if (write_counter < 8 && (start_addr + write_counter) < WEIGHT) begin  
-                        wr_en    <= 1;
-                        loc_addr <= start_addr + write_counter;
-                        loc_in   <= data_i[(write_counter * 16) +: 16];
-                        data_o[(write_counter * 16) +: 16] <= data_i[(write_counter * 16) +: 16];
-                        write_counter <= write_counter + 1;
-                    end
-                    else begin
-                        wr_en         <= 0;
-                        busy_o        <= 0;  
-                        write_counter <= 0;
-                    end
-                end
-                else begin
-                    busy_o <= 0;
-                    wr_en  <= 0;
-                    data_o <= 128'b0;
-                end
-            end
+        if (load_i) begin
+            busy_o <= 1;
 
-            2'b01: begin  // ✅ key_i[127] == 1: mem_dual에 32비트 단위로 저장 (start_addr 포함)
-                if (load_i) begin
-                    busy_o <= 1;
-                    dual_write_counter <= 0;
-                    start_addr <= key_i[9:0];  // ✅ key_i에서 10비트 주소 추출
+            if (data_i != 0) begin // ✅ `data_i`가 0이 아니면 저장
+                if (key_i < WEIGHT) begin  // ✅ key_i < 66 → POSITION_RAM에 16비트 저장
+                    wr_en_pos <= 1;
+                    wr_en_dual <= 0;
+                    loc_addr <= key_i;
+                    loc_in   <= data_i[15:0];  // ✅ 16비트 저장
+                    data_o <= data_i;  // ✅ 즉시 data_o 업데이트
                 end
-                else if (busy_o) begin
-                    if (dual_write_counter < 4 && start_addr + dual_write_counter < Y) begin
-                        wr_en <= 1;
-                        addr_0_reg <= start_addr + dual_write_counter;
-                        
-                        case (dual_write_counter)
-                            4'd0: din <= data_i[31:0];  // ✅ 첫 번째 저장: start_addr (32비트 중 하위 10비트만)
-                            4'd1: din <= data_i[63:32];  // ✅ 32비트 데이터 저장
-                            4'd2: din <= data_i[95:64]; 
-                            4'd3: din <= data_i[127:96]; 
-                            default: din <= 0;
-                        endcase
-                        data_o[(dual_write_counter * 32) +: 32] <= data_i[(dual_write_counter * 32) +: 32];
-                        dual_write_counter <= dual_write_counter + 1;
-                    end
-                    else begin
-                        wr_en <= 0;
-                        busy_o <= 0;
-                        dual_write_counter <= 0;
-                    end
+                else if (key_i >= WEIGHT && key_i < (WEIGHT + 553)) begin  // ✅ key_i 66~(66+553) → RANDOM_BITS_MEM에 32비트 저장
+                    wr_en_pos <= 0;
+                    wr_en_dual <= 1;
+                    addr_0_reg <= key_i - WEIGHT;
+                    din <= data_i[31:0];  // ✅ 32비트 저장
+                    data_o <= data_i;  // ✅ 즉시 data_o 업데이트
                 end
                 else begin
-                    busy_o <= 0;
-                    wr_en  <= 0;
+                    wr_en_pos <= 0;
+                    wr_en_dual <= 0;
                 end
             end
-            
-            default: begin  // key_i[127] == 2 이상일 경우 동작 안 함
-                busy_o <= 0;
-                wr_en  <= 0;
-                data_o <= 128'b0;
+            else begin // ✅ `data_i == 0`이면 key_i에 해당하는 메모리 값 읽기
+                wr_en_pos <= 0;
+                wr_en_dual <= 0;
+
+                if (key_i < WEIGHT) begin
+                    loc_addr <= key_i; // ✅ POSITION_RAM에서 데이터 읽기
+                    data_o <= { 112'b0, loc_out};  // ✅ 데이터는 상위 16비트에 배치, 나머지는 0
+                end
+                else if (key_i >= WEIGHT && key_i < (WEIGHT + 553)) begin
+                    addr_0_reg <= key_i - WEIGHT; // ✅ RANDOM_BITS_MEM에서 데이터 읽기
+                    data_o <= {96'b0, dout_0};  // ✅ 데이터는 상위 32비트에 배치, 나머지는 0
+                end
+                else begin
+                    data_o <= 128'b1;  // ✅ 유효하지 않은 key 값일 때
+                end
             end
-        endcase
+        end
+        else begin
+            busy_o <= 0;
+            wr_en_pos <= 0;
+            wr_en_dual <= 0;
+        end
     end
-
-
-
 endmodule

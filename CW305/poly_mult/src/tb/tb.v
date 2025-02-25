@@ -190,8 +190,8 @@ module tb();
       #(pUSB_CLOCK_PERIOD*2) pushbutton = 1;
       #(pUSB_CLOCK_PERIOD*10);
 
-      write_bytes(0, 16, `REG_CRYPT_TEXTIN, {32'h12345678, 32'habcdef01, 32'h87654321, 32'hdeadbeef});
-      write_bytes(0, 16, `REG_CRYPT_KEY, {32'h4F000000, 32'h0, 32'h0, 32'h40});
+      write_bytes(0, 16, `REG_CRYPT_TEXTIN, {128'b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000011101110000100000111111000});
+      write_bytes(0, 16, `REG_CRYPT_KEY, {128'b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000010 });
 
       $display("Encrypting via register...");
       write_byte(0, `REG_CRYPT_GO, 0, 1);
@@ -207,6 +207,40 @@ module tb();
          $display("            got %h", read_data);
       end
 
+
+      write_bytes(0, 16, `REG_CRYPT_TEXTIN, {128'b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000});
+      write_bytes(0, 16, `REG_CRYPT_KEY, {128'b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000010 });
+
+      $display("Encrypting via register...");
+      write_byte(0, `REG_CRYPT_GO, 0, 1);
+      repeat (5) @(posedge usb_clk);
+      wait_done();
+      read_bytes(0, 16, `REG_CRYPT_CIPHEROUT, read_data);
+      if (read_data == expected_cipher) begin
+         $display("Good result");
+      end
+      else begin
+         errors = errors + 1;
+         $display("ERROR: expected %h", expected_cipher);
+         $display("            got %h", read_data);
+      end
+
+      write_bytes(0, 16, `REG_CRYPT_TEXTIN, {32'h12345678, 32'habcdef01, 32'h87654321, 32'hdeadbeef});
+      write_bytes(0, 16, `REG_CRYPT_KEY, {32'h80000000, 32'h0, 32'h0, 32'h02});
+
+      $display("Encrypting via register...");
+      write_byte(0, `REG_CRYPT_GO, 0, 1);
+      repeat (5) @(posedge usb_clk);
+      wait_done();
+      read_bytes(0, 16, `REG_CRYPT_CIPHEROUT, read_data);
+      if (read_data == expected_cipher) begin
+         $display("Good result");
+      end
+      else begin
+         errors = errors + 1;
+         $display("ERROR: expected %h", expected_cipher);
+         $display("            got %h", read_data);
+      end
 
       // $display("Encrypting via usb_trigger (USB clock disabled)...");
       // write_bytes(0, 1, `REG_CRYPT_TEXTIN, 8'h01);
