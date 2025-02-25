@@ -54,13 +54,14 @@ module poly_mult_top #(
     reg wr_en_pos;
     reg wr_en_dual;
 
+    reg start;
     wire [LOG_WEIGHT-1:0] loc_addr;
     wire [ADDR_WIDTH-1:0] addr_0_mux;
     wire [ADDR_WIDTH-1:0] addr_1_mux;
 
-    assign addr_0_mux = (load_i) ? addr_0_reg : addr_result;
-    assign addr_1_mux = (load_i) ? addr_1_reg : addr_result;
-    assign loc_addr = (load_i) ? loc_addr_write : loc_addr_read;
+    assign addr_0_mux = (load_i) ? addr_0_reg : (start ? addr_0_reg : addr_result);
+    assign addr_1_mux = (load_i) ? addr_1_reg : (start ? addr_1_reg : addr_result);
+    assign loc_addr = (load_i) ? loc_addr_read : (start ? loc_addr_read : loc_addr_write);
 
     assign mux_word_0 = (addr_0_reg> RAMSIZE/2 - 1)? 0: dout_0;
     assign mux_word_1 = (addr_1_reg> RAMSIZE/2 - 1)? 0: dout_1;  
@@ -129,10 +130,14 @@ module poly_mult_top #(
 
 
 
-    always @(posedge clk) begin
+        always @(posedge clk) begin
         if (load_i) begin
             busy_o <= 1;
 
+            if (data_i == 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) begin // ✅ 128비트가 전부 1이면 start 신호 활성화
+                start <= 1;
+            end
+            //여기 문제 가능성 큼
             if (data_i != 0) begin // ✅ `data_i`가 0이 아니면 저장
                 if (key_i < WEIGHT) begin  // ✅ key_i < 66 → POSITION_RAM에 16비트 저장
                     wr_en_pos <= 1;
@@ -168,6 +173,14 @@ module poly_mult_top #(
                 else begin
                     data_o <= 128'b1;  // ✅ 유효하지 않은 key 값일 때
                 end
+            end
+        end
+        else if (start) begin
+            // ✅ start 신호를 유지하면서 valid == 1이 될 때까지 대기
+            if (valid) begin
+                start <= 0;  // ✅ poly_mult 종료
+                busy_o <= 0; // ✅ 작업 완료 후 busy_o 비활성화
+                data_o <= dout;  // ✅ poly_mult 결과 출력
             end
         end
         else begin
