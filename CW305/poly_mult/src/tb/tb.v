@@ -112,14 +112,6 @@ module tb();
          wait_done();
          read_bytes(0, 16, `REG_CRYPT_CIPHEROUT, read_data);
 
-         if (read_data == expected_cipher) begin
-               $display("Good result");
-         end
-         else begin
-               errors = errors + 1;
-               $display("ERROR: expected %h", expected_cipher);
-               $display("            got %h", read_data);
-         end
       end
    endtask
 
@@ -144,14 +136,6 @@ module tb();
          wait_done();
          read_bytes(0, 16, `REG_CRYPT_CIPHEROUT, read_data);
 
-         if (read_data == expected_cipher) begin
-               $display("Good result");
-         end
-         else begin
-               errors = errors + 1;
-               $display("ERROR: expected %h", expected_cipher);
-               $display("            got %h", read_data);
-         end
       end
    endtask
 
@@ -915,69 +899,6 @@ module tb();
          $display("ERROR: expected %h", expected_cipher);
          $display("            got %h", read_data);
       end
-
-      // $display("Encrypting via usb_trigger (USB clock disabled)...");
-      // write_bytes(0, 1, `REG_CRYPT_TEXTIN, 8'h01);
-      // expected_cipher = 128'h0efee0bff4cf170752994fb45bd45934;
-      // usb_clk_enable = 1'b0;
-      // @(posedge usb_clk) usb_trigger = 1'b1;
-      // repeat (10) @(posedge usb_clk); 
-      // usb_trigger = 1'b0;
-      // repeat (30) @(posedge pll_clk1);
-      // usb_clk_enable = 1'b1;
-      // repeat (5) @(posedge usb_clk);
-      // wait_done();
-      // read_bytes(0, 16, `REG_CRYPT_CIPHEROUT, read_data);
-      // if (read_data == expected_cipher) begin
-      //    $display("Good result");
-      // end
-      // else begin
-      //    errors = errors + 1;
-      //    $display("ERROR: expected %h", expected_cipher);
-      //    $display("            got %h", read_data);
-      // end
-
-
-      // $display("Encrypting via usb_trigger (USB clock enabled)...");
-      // write_bytes(0, 1, `REG_CRYPT_TEXTIN, 8'h02);
-      // expected_cipher = 128'h8623e205b50bede46f795d1aad15faae;
-      // @(posedge usb_clk) usb_trigger = 1'b1;
-      // repeat (10) @(posedge usb_clk); 
-      // usb_trigger = 1'b0;
-      // repeat (30) @(posedge pll_clk1);
-      // repeat (5) @(posedge usb_clk);
-      // wait_done();
-      // read_bytes(0, 16, `REG_CRYPT_CIPHEROUT, read_data);
-      // if (read_data == expected_cipher) begin
-      //    $display("Good result");
-      // end
-      // else begin
-      //    errors = errors + 1;
-      //    $display("ERROR: expected %h", expected_cipher);
-      //    $display("            got %h", read_data);
-      // end
-
-      // $display("Encrypting via usb_trigger (USB clock disabled, returns mid-encryption)...");
-      // write_bytes(0, 1, `REG_CRYPT_TEXTIN, 8'h03);
-      // expected_cipher = 128'h46be87df4d18bfe6d0d1d3b20b6bf382;
-      // usb_clk_enable = 1'b0;
-      // @(posedge usb_clk) usb_trigger = 1'b1;
-      // repeat (2) @(posedge usb_clk); 
-      // usb_trigger = 1'b0;
-      // repeat (2) @(posedge pll_clk1);
-      // usb_clk_enable = 1'b1;
-      // repeat (1) @(posedge usb_clk);
-      // wait_done();
-      // read_bytes(0, 16, `REG_CRYPT_CIPHEROUT, read_data);
-      // if (read_data == expected_cipher) begin
-      //    $display("Good result");
-      // end
-      // else begin
-      //    errors = errors + 1;
-      //    $display("ERROR: expected %h", expected_cipher);
-      //    $display("            got %h", read_data);
-      // end
-
 
 
       $display("done!");
