@@ -26,6 +26,7 @@ module poly_mult_top #(
     parameter N_MEMd = N_MEM - N_B                 
 )(
     input wire clk,
+    input wire rst,
     input wire load_i,
     input wire [9:0] key_i,   // ✅ 메모리 주소 (0 ~ 66+553)
     input wire [127:0] data_i,  // ✅ 저장할 데이터
@@ -50,7 +51,6 @@ module poly_mult_top #(
     wire [W_BY_X-1:0]dout;
     wire valid;
     reg rd_dout;
-
     reg wr_en_pos;
     reg wr_en_dual;
 
@@ -136,6 +136,10 @@ module poly_mult_top #(
 
             if (data_i == 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) begin // ✅ 128비트가 전부 1이면 start 신호 활성화
                 start <= 1;
+                rd_dout <= 0;
+            end
+            else if (start) begin
+                start <= 0;
             end
             //여기 문제 가능성 큼
             if (data_i != 0) begin // ✅ `data_i`가 0이 아니면 저장
@@ -175,14 +179,11 @@ module poly_mult_top #(
                 end
             end
         end
-        else if (start) begin
-            // ✅ start 신호를 유지하면서 valid == 1이 될 때까지 대기
-            if (valid) begin
-                start <= 0;  // ✅ poly_mult 종료
-                busy_o <= 0; // ✅ 작업 완료 후 busy_o 비활성화
-                data_o <= dout;  // ✅ poly_mult 결과 출력
-            end
-        end
+        else if (start == 0 && valid) begin
+            // ✅ poly_mult 종료 후 valid가 1이 될 때까지 대기
+            busy_o <= 0; 
+            data_o <= dout;  
+        end 
         else begin
             busy_o <= 0;
             wr_en_pos <= 0;
