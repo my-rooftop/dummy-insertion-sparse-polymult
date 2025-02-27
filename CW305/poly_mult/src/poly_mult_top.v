@@ -153,7 +153,7 @@ module poly_mult_top #(
             // loc_addr_read <= 0;
             data_write <= 0;
             // addr_0_reg <= 0;
-            addr_1_reg <= 0;
+            // addr_1_reg <= 0;
             din <= 0;
             addr_result <= 0;
             data_o <= 0;
