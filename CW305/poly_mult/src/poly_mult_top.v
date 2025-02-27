@@ -37,8 +37,8 @@ module poly_mult_top #(
     // 내부 신호 정의
     wire [LOGW-1:0] loc_in;
     reg [LOGW-1:0] data_write;
-    reg [LOG_WEIGHT-1:0] loc_addr_write;
-    reg [LOG_WEIGHT-1:0] loc_addr_read;
+    wire [LOG_WEIGHT-1:0] loc_addr_write;
+    wire [LOG_WEIGHT-1:0] loc_addr_read;
 
     reg [W_BY_X-1:0] din;
     wire [ADDR_WIDTH-1:0]addr_0;
@@ -61,9 +61,8 @@ module poly_mult_top #(
     wire [ADDR_WIDTH-1:0] addr_0_mux;
     wire [ADDR_WIDTH-1:0] addr_1_mux;
 
-    // assign addr_0_mux = (start) ? 0 : addr_0_reg;
-    // assign addr_1_mux = (start) ? 0: addr_1_reg;
-    assign loc_addr = (start) ? 0 : loc_addr_read;
+    assign loc_addr_write = (data_i == 0) ? 0 : key_i;
+    assign loc_addr_read = (data_i == 0) ? key_i : loc_addr;
 
     assign mux_word_0 = (addr_0_reg> RAMSIZE/2 - 1)? 0: dout_0;
     assign mux_word_1 = (addr_1_reg> RAMSIZE/2 - 1)? 0: dout_1;  
@@ -85,8 +84,8 @@ module poly_mult_top #(
         .clock(clk),
         .data_0(din),
         .data_1(0),
-        .address_0(addr_0_reg),
-        .address_1(addr_1_reg),
+        .address_0(addr_0_mux),
+        .address_1(addr_1_mux),
         .wren_0(wr_en_dual),
         .wren_1(0),
         .q_0(dout_0), // ✅ 읽기 데이터
@@ -138,6 +137,8 @@ module poly_mult_top #(
         end
     end
 
+    assign addr_0_mux = (key_i >= WEIGHT && key_i < (WEIGHT + 553)) ? (key_i - WEIGHT) : addr_0;
+    assign addr_1_mux = (key_i >= WEIGHT && key_i < (WEIGHT + 553)) ? 0 : addr_1;
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -148,8 +149,8 @@ module poly_mult_top #(
             wr_en_dual <= 0;
             rd_dout <= 0;
 
-            loc_addr_write <= 0;
-            loc_addr_read <= 0;
+            // loc_addr_write <= 0;
+            // loc_addr_read <= 0;
             data_write <= 0;
             // addr_0_reg <= 0;
             addr_1_reg <= 0;
@@ -169,7 +170,7 @@ module poly_mult_top #(
                 if (key_i < WEIGHT) begin
                     wr_en_pos <= 1;
                     wr_en_dual <= 0;
-                    loc_addr_write <= key_i;
+                    // loc_addr_write <= key_i;
                     data_write   <= data_i[15:0];
                     data_o <= data_i;
                 end
@@ -190,7 +191,7 @@ module poly_mult_top #(
                 wr_en_dual <= 0;
 
                 if (key_i < WEIGHT) begin
-                    loc_addr_read <= key_i;
+                    // loc_addr_read <= key_i;
                     data_o <= {112'b0, loc_in};
                 end
                 else if (key_i >= WEIGHT && key_i < (WEIGHT + 553)) begin
