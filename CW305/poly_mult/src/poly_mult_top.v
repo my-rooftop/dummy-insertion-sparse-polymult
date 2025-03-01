@@ -55,6 +55,7 @@ module poly_mult_top #(
     reg rd_dout;
     reg wr_en_pos;
     reg wr_en_dual;
+    reg flag;
 
     reg start;
     wire [LOG_WEIGHT-1:0] loc_addr;
@@ -158,13 +159,20 @@ module poly_mult_top #(
             din <= 0;
             addr_result <= 0;
             data_o <= 0;
+            flag <= 0;
         end
         else if (load_i) begin
             busy_o <= 1;
 
             if (data_i == 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) begin
-                start <= 1;
-                rd_dout <= 0;
+                if(key_i == 0) begin
+                    rd_dout <= 1;
+                    addr_result <= 0;//추후 수정 필요
+                end
+                else begin
+                    start <= 1;
+                    flag <= 1;
+                end
             end
 
             if (data_i != 0) begin 
@@ -208,11 +216,14 @@ module poly_mult_top #(
             start <= 0;
         end
         else if (start == 0 && valid) begin
-            busy_o <= 0;
             data_o <= dout;
+            busy_o <= 0;
+            flag <= 0;
         end 
         else begin
-            busy_o <= 0;
+            if (flag == 0) begin
+                busy_o <= 0;
+            end
             wr_en_pos <= 0;
             wr_en_dual <= 0;
         end

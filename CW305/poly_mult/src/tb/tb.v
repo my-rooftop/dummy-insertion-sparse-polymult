@@ -971,13 +971,13 @@ module tb();
       end
 
 
-      $display("done!");
-      #(pUSB_CLOCK_PERIOD*10);
-      if (errors)
-         $display("SIMULATION FAILED (%0d errors, %0d warnings).", errors, warnings);
-      else
-         $display("Simulation passed (%0d warnings).", warnings);
-      $finish;
+      // $display("done!");
+      // #(pUSB_CLOCK_PERIOD*10);
+      // if (errors)
+      //    $display("SIMULATION FAILED (%0d errors, %0d warnings).", errors, warnings);
+      // else
+      //    $display("Simulation passed (%0d warnings).", warnings);
+      // $finish;
 
    end
 

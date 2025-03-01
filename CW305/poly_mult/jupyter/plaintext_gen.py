@@ -38,7 +38,7 @@ def generate_bit_words(num_sets=100):
 
     return all_results
 
-num_sets = 1000
+num_sets = 1
 bit_word_sets = generate_bit_words(num_sets=num_sets)
 
 # 파일 저장: 모든 세트의 워드를 32비트 이진 문자열로 저장
