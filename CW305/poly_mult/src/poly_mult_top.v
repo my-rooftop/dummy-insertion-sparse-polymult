@@ -2,7 +2,7 @@
 
 module poly_mult_top #(
     parameter MAX_WEIGHT = 75,
-    parameter WEIGHT = 66,
+    parameter WEIGHT = 2,
     parameter N = 17_669,
     parameter M = 15,
     parameter RAMWIDTH = 32,
@@ -98,7 +98,8 @@ module poly_mult_top #(
         .M(M),
         .W(W),
         .RAMWIDTH(RAMWIDTH),
-        .X(X)
+        .X(X),
+        .WEIGHT(WEIGHT)
     )
     DUT  (
         .clk(clk),

@@ -14,4 +14,4 @@ def convert_csv_to_mem(csv_filename, mem_filename):
     print(f"변환 완료: {mem_filename}")
 
 # 사용 예시
-convert_csv_to_mem("./hardware_attack/random_generator_py/y_bits.csv", "./hardware_attack/random_generator_py/y_128.mem")
+convert_csv_to_mem("/home/boochoo/hqc/dummy-insertion-sparse-polymult/hardware_vulnerable/random_generator_py/y_bits.csv", "/home/boochoo/hqc/dummy-insertion-sparse-polymult/hardware_vulnerable/random_generator_py/y_128.mem")

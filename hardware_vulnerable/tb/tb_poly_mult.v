@@ -12,7 +12,7 @@ module poly_mult_hqc_v1_tb
                                                         4,
                                                         
 //    parameter WEIGHT = (parameter_set == "hqc128")? 71: 
-    parameter WEIGHT = (parameter_set == "hqc128")? 66: 
+    parameter WEIGHT = (parameter_set == "hqc128")? 2: 
 //                       (parameter_set == "hqc192")? MAX_WEIGHT: //100:
                        (parameter_set == "hqc192")? 100:
 			           (parameter_set == "hqc256")? 131:
@@ -93,7 +93,8 @@ reg rd_dout;
   .M(M),
   .W(W),
   .RAMWIDTH(RAMWIDTH),
-  .X(X)
+  .X(X),
+  .WEIGHT(WEIGHT)
   
   )
   DUT  (
