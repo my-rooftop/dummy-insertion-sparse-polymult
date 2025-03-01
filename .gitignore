@@ -4,5 +4,4 @@
 /simulation/src/original/__pycache__/
 .vscode/
 *.pyc
-vivado_polymult/
-vivado_polymult_*/
+vivado_*/
