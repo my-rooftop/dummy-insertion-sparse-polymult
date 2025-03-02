@@ -246,14 +246,14 @@ module cw305_top #(
     assign crypt_busy = aes_busy;
 
 
-    // `ifdef ILA_REG_POLY
-    //     ila_2 U_reg_poly (
-    //         .clk (aes_clk),
-    //         .probe0 (aes_load),
-    //         .probe1 (aes_key),
-    //         .probe2 (aes_pt)
-    //     );
-    // `endif
+    `ifdef ILA_REG_POLY
+        ila_2 U_reg_poly (
+            .clk (aes_clk),
+            .probe0 (aes_load),
+            .probe1 (aes_key),
+            .probe2 (aes_pt)
+        );
+    `endif
 
 
    // Example AES Core
