@@ -39,7 +39,7 @@ module tb();
     parameter pTIMEOUT = 3000000;
     parameter pVERBOSE = 0;
     parameter pDUMP = 0;
-    parameter WEIGHT = 66; //2
+    parameter WEIGHT = 2; //2
     parameter MEM_SIZE = 553;
    
     reg [32-1:0] normal_words [0:MEM_SIZE - 1];
