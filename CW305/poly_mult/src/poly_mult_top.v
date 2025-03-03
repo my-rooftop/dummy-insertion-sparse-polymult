@@ -128,6 +128,13 @@ module poly_mult_top #(
 		.add_in(0)
     );
 
+    // ila_3 key_checker (
+    //     .clk(clk),
+    //     .probe0(key_i),
+    //     .probe1(data_i),
+    //     .probe2(din)
+    // );
+
     always @(posedge clk) begin
         if (key_i >= WEIGHT && key_i < (WEIGHT + 553)) begin
             addr_0_reg <= key_i - WEIGHT;
